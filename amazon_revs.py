@@ -116,7 +116,7 @@ def generate_product_projection(bipartite_graph):
 ########################################################################################################################
 
 
-file_path = "../data/faulty.txt"
+file_path = "../data/movies.txt"
 
 reviews = process_reviews(file_path)
 
