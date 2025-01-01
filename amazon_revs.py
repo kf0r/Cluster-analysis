@@ -11,8 +11,9 @@ import random
 import json
 import sqlite3
 import pickle
-
+import os
 from review import Review
+import database
 
 import networkx as nx
 
@@ -69,36 +70,24 @@ def create_bipartite_graph(reviews):
         #     print(f"{B[review.user_id][review.product_id]} edge added")
     return B
 
-
-def analyze_communities_louvain(graph):
-    start_time = time.time()
-    partition = community_louvain.best_partition(graph)
-    num_clusters = len(set(partition.values()))
-    louvain_time = time.time() - start_time
-    print(f"Louvain clusters: {num_clusters}, Time: {louvain_time:.4f}s")
-    return partition, louvain_time
-
-
-def analyze_communities_leiden(graph):
-    start_time = time.time()
-    result = algorithms.leiden(graph)
-    partition = result.to_node_community_map() 
-    num_clusters = len(result.communities)
-    leiden_time = time.time() - start_time
-    print(f"Leiden clusters: {num_clusters}, Time: {leiden_time:.4f}s")
-    return partition, leiden_time
-
 def apply_clustering_algorithms(G):
     clusters = {}
-    print("Applying clustering algorithms...")
-    clusters['louvain'] = community_louvain.best_partition(G)
-    print("Louvain done")
-    clusters['leiden'] = algorithms.leiden(G)
-    print("Leiden done")
-    clusters['label_propagation'] = algorithms.label_propagation(G)
-    print("Label propagation done")
-    # clusters['girvan_newman'] = list(nx.community.girvan_newman(G))
-    # print("Girvan-Newman done")
+    print("Applying Louvain clustering...")
+    louvain_partition = community_louvain.best_partition(G)
+    clusters['louvain'] = louvain_partition
+    print("Louvain clustering done.")
+    
+    print("Applying Leiden clustering...")
+    leiden_communities = algorithms.leiden(G)
+    leiden_partition = {node: idx for idx, community in enumerate(leiden_communities.communities) for node in community}
+    clusters['leiden'] = leiden_partition
+    print("Leiden clustering done.")
+    
+    print("Applying Label Propagation clustering...")
+    label_propagation_communities = algorithms.label_propagation(G)
+    label_propagation_partition = {node: idx for idx, community in enumerate(label_propagation_communities.communities) for node in community}
+    clusters['label_propagation'] = label_propagation_partition
+    print("Label Propagation clustering done.")
     return clusters
 
 def calculate_modularity(G, partition):
@@ -107,20 +96,6 @@ def calculate_modularity(G, partition):
 def calculate_density(G, community):
     subgraph = G.subgraph(community)
     return nx.density(subgraph)
-
-def analyze_communities_label(graph):
-    start_time = time.time()
-    partition = list(nx.algorithms.community.label_propagation_communities(graph))
-    num_clusters = len(partition)
-    label_time = time.time() - start_time
-    print(f"Label propagation clusters: {num_clusters}, Time: {label_time:.4f}s")
-    return partition, label_time
-
-def temporal_analysis(df):
-    df['date'] = pd.to_datetime(df['date'], unit='s')
-    df_grouped = df.groupby(pd.Grouper(key='date', freq='W'))['score'].mean()
-    df_grouped.plot(title="Średnia ocena w czasie", ylabel="Średnia ocena", xlabel="Data")
-    plt.show()
 
 def generate_product_projection(bipartite_graph):
     product_graph = nx.Graph()
@@ -137,7 +112,6 @@ def generate_product_projection(bipartite_graph):
                 product_graph.add_edge(p1, p2, weight=1)
                 
     return product_graph
-
 
 def analyze_clusters(clusters):
     analysis = {}
@@ -169,89 +143,63 @@ def visualize_statistics(analysis):
     plt.title('Cluster Size Statistics')
     plt.show()
 
-def get_metadata(product_id, db_path):
-    conn = sqlite3.connect(db_path)
-    c = conn.cursor()
-    c.execute('SELECT data FROM metadata WHERE asin = ?', (product_id,))
-    row = c.fetchone()
-    conn.close()
-    if row:
-        return json.loads(row[0])
-    else:
-        return None
-
 def save_communities(communities, db_path, prefix):
     for method, community_list in communities.items():
-        for idx, (community, score, density, size) in enumerate(community_list):
-            with open(f"{prefix}_{method}_community_{idx}.txt", "w") as f:
-                f.write(f"Score: {score}\n")
-                f.write(f"Density: {density}\n")
-                f.write(f"Size: {size}\n")
+        for i, community in enumerate(community_list):
+            directory = f"{method}/{prefix}"
+            os.makedirs(directory, exist_ok=True)
+            print(type(community))
+            print(community[0])
+            print(community[1])
+            with open(f"{method}/{prefix}/community_{i}.txt", "w") as f:
+                f.write(f"Size: {len(community)}\n")
+                f.write("\n")
                 for product_id in community:
-                    product_metadata = get_metadata(product_id, db_path)
-                    if product_metadata:
-                        f.write(f"Product ID: {product_id}\n")
-                        f.write(f"Title: {product_metadata.get('title', 'N/A')}\n")
-                        f.write(f"Category: {product_metadata.get('main_category', 'N/A')}\n")
-                        f.write(f"Average Rating: {product_metadata.get('average_rating', 'N/A')}\n")
-                        f.write(f"Rating Number: {product_metadata.get('rating_number', 'N/A')}\n")
-                        f.write("\n")
-                    else:
-                        f.write(f"Product ID: {product_id}\n")
-                        f.write("Metadata not found\n\n")
-            print(f"Saved {prefix} {method} community {idx} with score {score} to {prefix}_{method}_community_{idx}.txt")
+                    print(f"{type(product_id)}")
+                    product_metadata = database.get_metadata(product_id, db_path)
+                    f.write(f"Product ID: {product_id}\n")
+                    f.write(f"Title: {product_metadata.get('title', 'N/A')}\n")
+                    f.write(f"Category: {product_metadata.get('main_category', 'N/A')}\n")
+                    f.write(f"Average Rating: {product_metadata.get('average_rating', 'N/A')}\n")
+                    f.write(f"Rating Number: {product_metadata.get('rating_number', 'N/A')}\n")
+                    f.write("\n")
+                else:
+                    f.write(f"Product ID: {product_id}\n")
+                    f.write("Metadata not found\n\n")
+            print(f"Saved {prefix} {method} community {i} to {prefix}/{method}/community_{i}.txt")
 
-def save_largest_communities(clusters, db_path, num_communities=3):
-    largest_communities = {}
+def find_dense(G, clusters, num_communities=10):
+    densest_communities = {}
     for method, cluster in clusters.items():
-        if isinstance(cluster, dict):
-            communities = {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
-        elif hasattr(cluster, 'communities'):
-            communities = {i: c for i, c in enumerate(cluster.communities)}
-        else:
-            raise ValueError(f"Unexpected cluster type for method {method}: {type(cluster)}")
+        communities = {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
         
-        # Sort communities by size and select the largest ones
-        largest_communities[method] = sorted(communities.values(), key=len, reverse=True)[:num_communities]
-    save_communities(largest_communities, db_path, "largest")
-
-def save_random_communities(clusters, db_path, num_communities=3):
-    random_communities = {}
-    for method, cluster in clusters.items():
-        if isinstance(cluster, dict):
-            communities = {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
-        elif hasattr(cluster, 'communities'):
-            communities = {i: c for i, c in enumerate(cluster.communities)}
-        else:
-            raise ValueError(f"Unexpected cluster type for method {method}: {type(cluster)}")
-        
-        # Select random communities
-        random_communities[method] = random.sample(list(communities.values()), min(num_communities, len(communities)))
-    save_communities(random_communities, db_path, "random")
-
-def find_best_partitions(clusters, G, num_communities=3):
-    best_partitions = {}
-    for method, cluster in clusters.items():
-        if isinstance(cluster, dict):
-            communities = {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
-        elif hasattr(cluster, 'communities'):
-            communities = {i: c for i, c in enumerate(cluster.communities)}
-        else:
-            raise ValueError(f"Unexpected cluster type for method {method}: {type(cluster)}")
-        
-        # Calculate modularity, density, and size for each community
-        community_scores = []
+        # Calculate density for each community
+        community_densities = []
         for idx, community in communities.items():
-            partition = {node: idx for node in community}
             density = calculate_density(G, community)
-            size = len(community)
-            score = density + size  # Combine the criteria
-            community_scores.append((community, score, density, size))
+            community_densities.append(community)
         
-        # Sort communities by score and select the top ones
-        best_communities = sorted(community_scores, key=lambda x: x[1], reverse=True)[:num_communities]
-        best_partitions[method] = best_communities
-    return best_partitions
+        # Sort communities by density and select the top ones
+        densest_communities[method] = sorted(community_densities, key=lambda x: x[1], reverse=True)[:num_communities]
+    return densest_communities
+        
+def find_largest(clusters, num_communities=10):
+    largest_communities = {}
+    smallest_communities = {}
+    medium_communities = {}
+    for method, cluster in clusters.items():
+        communities = {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
+        
+        # Calculate size for each community
+        community_sizes = []
+        for idx, community in communities.items():
+            community_sizes.append(community)
+        
+        # Sort communities by size and select the top ones
+        largest_communities[method] = sorted(community_sizes, key=lambda x: x[1], reverse=True)[:num_communities]
+        smallest_communities[method] = sorted(community_sizes, key=lambda x: x[1])[:num_communities]
+        medium_communities[method] = sorted(community_sizes, key=lambda x: x[1])[num_communities//2:num_communities//2+num_communities]
+    return largest_communities, smallest_communities, medium_communities
 
 if __name__ == "__main__":
     input_path = 'castrated.json'
@@ -273,27 +221,46 @@ if __name__ == "__main__":
     print("Applying clustering algorithms...")
     clusters = apply_clustering_algorithms(review_graph)
     print("Clustering algorithms applied.")
+
+    # print(f"{type(clusters)}")
+    # for key in clusters.keys():
+    #     print(f"{key}: {type(clusters[key])}")
+    #     communites = clusters[key]
+    #     for key, community in communites.items():
+    #         print(f"{key}: {type(community)}")
     
-    print("Analyzing clusters...")
-    analysis = analyze_clusters(clusters)
-    print("Cluster analysis done.")
+    print("Finding dense communities...")
+    dense = find_dense(review_graph, clusters)
+
+    print("Finding communities based on size...")
+    largest, smallest, medium = find_largest(clusters)
+
+    print("Getting random communities...")
+    #randos = get_random_communities(clusters)
+
+    print("Saving communities...")
+    save_communities(largest, db_path, "largest")
+    save_communities(smallest, db_path, "smallest")
+    save_communities(medium, db_path, "medium")
+    save_communities(dense, db_path, "dense")
+    #save_communities(randos, db_path, "random")
+
+    print("Building communities size graph...")
+    pass #3 graphs, one for each method. X-axis is community size, Y-axis is number of communities of that size
+
+    print("Mean community size graph...")
+    pass #1 graph, X-axis is method, Y-axis is mean community size
+
+    print("Variance community size graph...")
+    pass #1 graph, X-axis is method, Y-axis is variance of community size
+
+    print("Standard deviation community size graph...")
+    pass #1 graph, X-axis is method, Y-axis is standard deviation of community size
+
+    print("Calculating modularity...")
+    pass #1 graph, X-axis is method, Y-axis is modularity
+
+    print("Calculating density...")
+    pass #1 graph, X-axis is method, Y-axis is density
+
     
-    print("Visualizing statistics...")
-    visualize_statistics(analysis)
-    print("Statistics visualization done.")
-    
-    print("Finding best communities...")
-    best_partitions = find_best_partitions(clusters, review_graph)
-    print("Best communities found.")
-    
-    print("Saving best communities...")
-    save_communities(best_partitions, db_path, "best")
-    print("Best communities saved.")
-    
-    print("Saving largest communities...")
-    save_largest_communities(clusters, db_path)
-    print("Largest communities saved.")
-    
-    print("Saving random communities...")
-    save_random_communities(clusters, db_path)
-    print("Random communities saved.")

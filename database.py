@@ -36,5 +36,16 @@ def create_metadata_db(json_path, db_path):
     conn.commit()
     conn.close()
 
+def get_metadata(product_id, db_path):
+    conn = sqlite3.connect(db_path)
+    c = conn.cursor()
+    c.execute('SELECT data FROM metadata WHERE asin = ?', (product_id,))
+    row = c.fetchone()
+    conn.close()
+    if row:
+        return json.loads(row[0])
+    else:
+        return None
+
 # Create the SQLite database
 create_metadata_db('../data/meta_Books.jsonl', 'metadata.db')
