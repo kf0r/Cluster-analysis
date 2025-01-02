@@ -57,6 +57,28 @@ def process_reviews(input_path, error_log="error_lines.txt"):
     print(f"Total reviews processed: {len(reviews)}")
     return reviews
 
+def filter_bipart_graph(graph, min_reviews=5):
+    initial_product_count = len([node for node in graph.nodes if graph.nodes[node].get("bipartite") == 1])
+    initial_user_count = len([node for node in graph.nodes if graph.nodes[node].get("bipartite") == 0])
+    
+    products_to_remove = [
+        node for node in graph.nodes if graph.nodes[node].get("bipartite") == 1 and graph.degree(node) < min_reviews
+    ]
+    graph.remove_nodes_from(products_to_remove)
+
+    users_to_remove = [
+        node for node in graph.nodes if graph.nodes[node].get("bipartite") == 0 and graph.degree(node) < 2
+    ]
+    graph.remove_nodes_from(users_to_remove)
+
+    final_product_count = len([node for node in graph.nodes if graph.nodes[node].get("bipartite") == 1])
+    final_user_count = len([node for node in graph.nodes if graph.nodes[node].get("bipartite") == 0])
+
+    print(f"Initial product count: {initial_product_count}, final product count: {final_product_count}")
+    print(f"Initial user count: {initial_user_count}, final user count: {final_user_count}")
+    print(f"Removed {len(products_to_remove)} products and {len(users_to_remove)} users.")
+    return graph
+
 def create_bipartite_graph(reviews):
     B = nx.Graph()
     i=0
@@ -111,7 +133,7 @@ def generate_product_projection(bipartite_graph):
                 product_graph[p1][p2]['weight'] += 1
             else:
                 product_graph.add_edge(p1, p2, weight=1)
-                
+    
     return product_graph
 
 def analyze_clusters(clusters):
@@ -205,7 +227,7 @@ def plot_community_sizes_distro(clusters):
         communities = {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
         sizes = [len(community) for community in communities.values()]
         print(f"Method: {method}")
-        print(sizes)
+        #print(sizes)
         plt.hist(sizes, bins=len(set(sizes)))
         plt.yscale('log')
         plt.title(f"Rozkład wielkości klastrów metody ({method})")
@@ -267,9 +289,12 @@ if __name__ == "__main__":
         review_graph = nx.Graph()
         batch_reviews = process_reviews(input_path)
         B = create_bipartite_graph(batch_reviews)
+        B = filter_bipart_graph(B)
+
         batch_graph = generate_product_projection(B)
         review_graph = nx.compose(review_graph, batch_graph)
         print(f"Processed batch of {len(batch_reviews)} reviews.")
+        print(f"Graph size: {len(review_graph.nodes)} nodes, {len(review_graph.edges)} edges.")
         save_graph(review_graph, graph_filename)
         print("Graph generated and saved to file")
     
