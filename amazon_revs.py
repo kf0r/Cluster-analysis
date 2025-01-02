@@ -14,7 +14,8 @@ import pickle
 import os
 from review import Review
 import database
-
+from scipy import stats
+import statistics
 import networkx as nx
 
 def save_graph(graph, filename):
@@ -148,14 +149,12 @@ def save_communities(communities, db_path, prefix):
         for i, community in enumerate(community_list):
             directory = f"{method}/{prefix}"
             os.makedirs(directory, exist_ok=True)
-            print(type(community))
-            print(community[0])
-            print(community[1])
+            
             with open(f"{method}/{prefix}/community_{i}.txt", "w") as f:
                 f.write(f"Size: {len(community)}\n")
                 f.write("\n")
                 for product_id in community:
-                    print(f"{type(product_id)}")
+                    #print(f"{type(product_id)}")
                     product_metadata = database.get_metadata(product_id, db_path)
                     f.write(f"Product ID: {product_id}\n")
                     f.write(f"Title: {product_metadata.get('title', 'N/A')}\n")
@@ -196,10 +195,66 @@ def find_largest(clusters, num_communities=10):
             community_sizes.append(community)
         
         # Sort communities by size and select the top ones
-        largest_communities[method] = sorted(community_sizes, key=lambda x: x[1], reverse=True)[:num_communities]
-        smallest_communities[method] = sorted(community_sizes, key=lambda x: x[1])[:num_communities]
-        medium_communities[method] = sorted(community_sizes, key=lambda x: x[1])[num_communities//2:num_communities//2+num_communities]
+        largest_communities[method] = sorted(community_sizes, key=lambda x: len(x), reverse=True)[:num_communities]
+        smallest_communities[method] = sorted(community_sizes, key=lambda x: len(x))[:num_communities]
+        medium_communities[method] = sorted(community_sizes, key=lambda x: len(x))[num_communities//2:num_communities//2+num_communities]
     return largest_communities, smallest_communities, medium_communities
+
+def plot_community_sizes_distro(clusters):
+    for method, cluster in clusters.items():
+        communities = {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
+        sizes = [len(community) for community in communities.values()]
+        print(f"Method: {method}")
+        print(sizes)
+        plt.hist(sizes, bins=len(set(sizes)))
+        plt.yscale('log')
+        plt.title(f"Rozkład wielkości klastrów metody ({method})")
+        plt.xlabel("Wielkość klastra")
+        plt.ylabel("Ilość klastrów")
+        plt.grid(True)
+        plot_filename = method + "/community_sizes_distro.png"
+        plt.savefig(plot_filename)
+        #plt.show()
+        plt.close()
+
+def plot_statistics_community_sizes(clusters, output_dir="plots"):
+    os.makedirs(output_dir, exist_ok=True)
+    means = {}
+    std_devs = {}
+    variances = {}
+    medians = {}
+    modes = {}
+    modularities = {}
+    for method, cluster in clusters.items():
+        communities = {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
+        sizes = [len(community) for community in communities.values()]
+        means[method] = np.mean(sizes)
+        std_devs[method] = np.std(sizes)
+        variances[method] = np.var(sizes)
+        medians[method] = np.median(sizes)
+        modes[method] = statistics.mode(sizes)
+        modularities[method] = calculate_modularity(review_graph, cluster)
+    
+    plot_from_data(modularities, "Modularność klastrów", "Metoda", "Modularność", output_dir)
+    plot_from_data(means, "Średnia wielkość społeczności", "Metoda", "Średnia", output_dir)
+    plot_from_data(std_devs, "Odchylenie standardowe wielkości społeczności", "Metoda", "Odchylenie standardowe", output_dir)
+    plot_from_data(variances, "Wariancja wielkości społeczności", "Metoda", "Wariancja", output_dir)
+    plot_from_data(medians, "Mediana wielkości społeczności", "Metoda", "Mediana", output_dir)
+    plot_from_data(modes, "Dominanta wielkości społeczności", "Metoda", "Dominanta", output_dir)
+
+def plot_from_data(data_dict, title, xlabel, ylabel, output_dir="plots"):
+    plt.figure(figsize=(10, 6))
+    methods = list(data_dict.keys())
+    values = list(data_dict.values())
+    plt.bar(methods, values)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(title)
+    filename = os.path.join(output_dir, title.replace(" ", "_").lower() + ".png")
+    print(f"Saving plot to {filename}")
+    plt.savefig(filename)
+    plt.close()
+
 
 if __name__ == "__main__":
     input_path = 'castrated.json'
@@ -222,13 +277,6 @@ if __name__ == "__main__":
     clusters = apply_clustering_algorithms(review_graph)
     print("Clustering algorithms applied.")
 
-    # print(f"{type(clusters)}")
-    # for key in clusters.keys():
-    #     print(f"{key}: {type(clusters[key])}")
-    #     communites = clusters[key]
-    #     for key, community in communites.items():
-    #         print(f"{key}: {type(community)}")
-    
     print("Finding dense communities...")
     dense = find_dense(review_graph, clusters)
 
@@ -245,22 +293,13 @@ if __name__ == "__main__":
     save_communities(dense, db_path, "dense")
     #save_communities(randos, db_path, "random")
 
-    print("Building communities size graph...")
-    pass #3 graphs, one for each method. X-axis is community size, Y-axis is number of communities of that size
+    print("Plotting community size distribution...")
+    plot_community_sizes_distro(clusters)
 
     print("Mean community size graph...")
-    pass #1 graph, X-axis is method, Y-axis is mean community size
-
     print("Variance community size graph...")
-    pass #1 graph, X-axis is method, Y-axis is variance of community size
-
     print("Standard deviation community size graph...")
-    pass #1 graph, X-axis is method, Y-axis is standard deviation of community size
-
     print("Calculating modularity...")
-    pass #1 graph, X-axis is method, Y-axis is modularity
-
-    print("Calculating density...")
-    pass #1 graph, X-axis is method, Y-axis is density
+    plot_statistics_community_sizes(clusters)
 
     
