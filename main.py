@@ -2,7 +2,7 @@ import networkx as nx
 from data_processing import load_graph, process_reviews, create_bipartite_graph, filter_bipart_graph, generate_product_projection, save_graph
 from clustering import apply_clustering_algorithms
 from plotting import plot_community_sizes_distro, plot_statistics_community_sizes
-from utility import find_dense, find_largest, save_communities
+from utility import find_dense, find_largest, save_communities, find_random
 
 if __name__ == "__main__":
     input_path = 'castrated.json'
@@ -17,9 +17,9 @@ if __name__ == "__main__":
         B = create_bipartite_graph(batch_reviews)
         B = filter_bipart_graph(B)
 
-        batch_graph = generate_product_projection(B)
-        review_graph = nx.compose(review_graph, batch_graph)
-        print(f"Processed batch of {len(batch_reviews)} reviews.")
+        review_graph = generate_product_projection(B)
+        #review_graph = nx.compose(review_graph, batch_graph)
+        #print(f"Processed batch of {len(batch_reviews)} reviews.")
         print(f"Graph size: {len(review_graph.nodes)} nodes, {len(review_graph.edges)} edges.")
         save_graph(review_graph, graph_filename)
         print("Graph generated and saved to file")
@@ -35,14 +35,19 @@ if __name__ == "__main__":
     largest, smallest, medium = find_largest(clusters)
 
     print("Getting random communities...")
-    #randos = get_random_communities(clusters)
+    randos = find_random(clusters)
 
     print("Saving communities...")
     save_communities(largest, db_path, "largest")
+    print("Largest communities saved.")
     save_communities(smallest, db_path, "smallest")
+    print("Smallest communities saved.")
     save_communities(medium, db_path, "medium")
+    print("Medium communities saved.")
     save_communities(dense, db_path, "dense")
-    #save_communities(randos, db_path, "random")
+    print("Dense communities saved.")
+    save_communities(randos, db_path, "random")
+    print("Random communities saved.")
 
     print("Plotting community size distribution...")
     plot_community_sizes_distro(clusters)

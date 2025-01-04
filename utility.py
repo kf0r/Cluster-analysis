@@ -1,11 +1,15 @@
 from clustering import calculate_density
 import os
 import database
+import random
+
+def normalize_clusters(cluster):
+    return {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
 
 def find_dense(G, clusters, num_communities=10):
     densest_communities = {}
     for method, cluster in clusters.items():
-        communities = {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
+        communities = normalize_clusters(cluster)
         
         # Calculate density for each community
         community_densities = []
@@ -22,7 +26,7 @@ def find_largest(clusters, num_communities=10):
     smallest_communities = {}
     medium_communities = {}
     for method, cluster in clusters.items():
-        communities = {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
+        communities = normalize_clusters(cluster)
         
         # Calculate size for each community
         community_sizes = []
@@ -34,6 +38,14 @@ def find_largest(clusters, num_communities=10):
         smallest_communities[method] = sorted(community_sizes, key=lambda x: len(x))[:num_communities]
         medium_communities[method] = sorted(community_sizes, key=lambda x: len(x))[num_communities//2:num_communities//2+num_communities]
     return largest_communities, smallest_communities, medium_communities
+
+def find_random(clusters, num_communities=10):
+    random_communities = {}
+    for method, cluster in clusters.items():
+        communities = normalize_clusters(cluster)
+        community_list = list(communities.values())
+        random_communities[method] = random.sample(community_list, min(num_communities, len(community_list)))
+    return random_communities
 
 def save_communities(communities, db_path, prefix):
     for method, community_list in communities.items():
