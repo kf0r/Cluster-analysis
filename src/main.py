@@ -5,9 +5,9 @@ from plotting import plot_community_sizes_distro, plot_statistics_community_size
 from utility import find_dense, find_largest, save_communities, find_random, save_central_nodes, compare_centralities
 
 if __name__ == "__main__":
-    input_path = 'books.json'
-    db_path = 'metadata.db'
-    graph_filename = 'review_graph.pkl'
+    input_path = '../data/books.json'
+    db_path = '../data/metadata.db'
+    graph_filename = '../data/review_graph.pkl'
     try:
         review_graph = load_graph(graph_filename)
         print("Graph loaded from file")

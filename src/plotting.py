@@ -19,7 +19,7 @@ from utility import get_moderate_community
 #     plt.title('Cluster Size Statistics')
 #     plt.show()
 
-def plot_community_sizes_distro(clusters):
+def plot_community_sizes_distro(clusters, output_dir="../output"):
     '''
     Plot community sizes distribution for each clustering algorithm using matplotlib.
     Parameters:
@@ -38,12 +38,12 @@ def plot_community_sizes_distro(clusters):
         plt.xlabel("Wielkość klastra")
         plt.ylabel("Ilość klastrów")
         plt.grid(True)
-        plot_filename = method + "/community_sizes_distro.png"
+        plot_filename = output_dir+ "/" + method + "/community_sizes_distro.png"
         plt.savefig(plot_filename)
         #plt.show()
         plt.close()
 
-def plot_statistics_community_sizes(review_graph, clusters, output_dir="plots"):
+def plot_statistics_community_sizes(review_graph, clusters, output_dir="../output/plots"):
     '''
     Plot statistics of community sizes for each clustering algorithm using matplotlib.
     Statistics are mean, standard deviation, variance, median and mode. Modularity is also plotted.
@@ -84,7 +84,7 @@ def plot_statistics_community_sizes(review_graph, clusters, output_dir="plots"):
     plot_from_data(medians, "Mediana wielkości społeczności", "Metoda", "Mediana", output_dir)
     plot_from_data(modes, "Dominanta wielkości społeczności", "Metoda", "Dominanta", output_dir)
 
-def plot_from_data(data_dict, title, xlabel, ylabel, output_dir="plots"):
+def plot_from_data(data_dict, title, xlabel, ylabel, output_dir="../output/plots"):
     '''
     Plot and save data from dictionary using matplotlib.
     Parameters: 
@@ -109,7 +109,7 @@ def plot_from_data(data_dict, title, xlabel, ylabel, output_dir="plots"):
     plt.savefig(filename)
     plt.close()
 
-def plot_single_community(graph, clusters):
+def plot_single_community(graph, clusters, output_dir="../output"):
     '''
     Plot single community for each clustering algorithm using matplotlib.
     Community is chosen as the one within a standard deviation of the mean size.
@@ -132,6 +132,6 @@ def plot_single_community(graph, clusters):
         nx.draw(subgraph, pos, with_labels=False, node_size=node_size, width=0.3)
         
         plt.title(f"Przykładowa społeczność {method}")
-        plt.savefig(f"{method}/single_community.png")
+        plt.savefig(f"{output_dir}/{method}/single_community.png")
         plt.close()
         print("Subgraph drawn and saved")

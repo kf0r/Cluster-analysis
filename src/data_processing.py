@@ -30,7 +30,7 @@ def load_graph(filename):
     print(f"Graph loaded from {filename}")
     return graph
 
-def process_reviews(input_path, error_log="error_lines.txt"):
+def process_reviews(input_path, error_log="../output/error_lines.txt"):
     '''
     Process reviews from JSON input file to list of Review objects.
     Parameters:

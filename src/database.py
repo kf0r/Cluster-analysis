@@ -64,4 +64,4 @@ def get_metadata(product_id, db_path):
         return None
 
 if __name__ == '__main__':
-    create_metadata_db('../data/meta_Books.jsonl', 'metadata.db')
+    create_metadata_db('../data/meta_Books.jsonl', '../data/metadata.db')

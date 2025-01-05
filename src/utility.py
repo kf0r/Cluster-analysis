@@ -33,7 +33,9 @@ def normalize_clusters(cluster):
     return {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
 
 def find_dense(G, clusters, num_communities=10):
-
+    '''
+    Find densest communities
+    '''
     densest_communities = {}
     for method, cluster in clusters.items():
         communities = normalize_clusters(cluster)
@@ -77,10 +79,10 @@ def find_random(clusters, num_communities=10):
 def save_communities(communities, db_path, prefix):
     for method, community_list in communities.items():
         for i, community in enumerate(community_list):
-            directory = f"{method}/{prefix}"
+            directory = f"../output/{method}/{prefix}"
             os.makedirs(directory, exist_ok=True)
             
-            with open(f"{method}/{prefix}/community_{i}.txt", "w") as f:
+            with open(f"../output/{method}/{prefix}/community_{i}.txt", "w") as f:
                 f.write(f"Size: {len(community)}\n")
                 f.write("\n")
                 for product_id in community:
@@ -97,7 +99,7 @@ def save_communities(communities, db_path, prefix):
                     f.write("Metadata not found\n\n")
             print(f"Saved {prefix} {method} community {i} to {prefix}/{method}/community_{i}.txt")
 
-def save_central_nodes(G, db_path, amount=10, output_dir="centralities"):
+def save_central_nodes(G, db_path, amount=10, output_dir="../output/centralities"):
     results = analyze_centrality(G, amount)
     os.makedirs(output_dir, exist_ok=True)
     for measure, nodes in results.items():
@@ -115,7 +117,7 @@ def save_central_nodes(G, db_path, amount=10, output_dir="centralities"):
         print(f"{measure} saved to {filename}")
     compare_centralities(results)
 
-def compare_centralities(results, amount=10):
+def compare_centralities(results):
     
     metrics = list(results.keys())
     for i in range(len(metrics)):
