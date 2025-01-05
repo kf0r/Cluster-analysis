@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>data_processing &#8212; Cluster-based social network analysis for review graph 1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=686e5160" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <script src="../_static/documentation_options.js?v=29a6c3e3"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for data_processing</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">networkx</span> <span class="k">as</span> <span class="nn">nx</span>
+<span class="kn">from</span> <span class="nn">review</span> <span class="kn">import</span> <span class="n">Review</span>
+<span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">combinations</span>
+
+<div class="viewcode-block" id="save_graph">
+<a class="viewcode-back" href="../data_processing.html#data_processing.save_graph">[docs]</a>
+<span class="k">def</span> <span class="nf">save_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Save graph to file.</span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        graph (nx.Graph): graph to save</span>
+<span class="sd">        filename (str): path to file</span>
+<span class="sd">    Returns: </span>
+<span class="sd">        None</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Graph saved to </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="load_graph">
+<a class="viewcode-back" href="../data_processing.html#data_processing.load_graph">[docs]</a>
+<span class="k">def</span> <span class="nf">load_graph</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Load graph from file.</span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        filename (str): path to file with saved graph</span>
+<span class="sd">    Returns: </span>
+<span class="sd">        graph(nx.Graph): loaded graph</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Graph loaded from </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span></div>
+
+
+<div class="viewcode-block" id="process_reviews">
+<a class="viewcode-back" href="../data_processing.html#data_processing.process_reviews">[docs]</a>
+<span class="k">def</span> <span class="nf">process_reviews</span><span class="p">(</span><span class="n">input_path</span><span class="p">,</span> <span class="n">error_log</span><span class="o">=</span><span class="s2">&quot;../output/error_lines.txt&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Process reviews from JSON input file to list of Review objects.</span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        input_path (str): path to input file</span>
+<span class="sd">        error_log (str): path to error log file</span>
+<span class="sd">    Returns: </span>
+<span class="sd">        reviews (list): list of Review objects</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">reviews</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">rev</span> <span class="o">=</span> <span class="mi">0</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">input_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">infile</span><span class="p">,</span> <span class="nb">open</span><span class="p">(</span><span class="n">error_log</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">encoding</span><span class="o">=</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">errorfile</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line_num</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">infile</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">())</span>
+                <span class="n">review</span> <span class="o">=</span> <span class="n">Review</span><span class="p">(</span>
+                    <span class="n">user_id</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;user_id&quot;</span><span class="p">],</span>
+                    <span class="n">product_id</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;parent_asin&quot;</span><span class="p">],</span>
+                    <span class="n">date</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">]</span><span class="o">/</span><span class="mi">1000</span><span class="p">,</span>
+                    <span class="n">score</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;rating&quot;</span><span class="p">],</span>
+                    <span class="n">text</span><span class="o">=</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;text&quot;</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">reviews</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">review</span><span class="p">)</span>
+                
+                <span class="n">rev</span> <span class="o">+=</span> <span class="mi">1</span>
+                <span class="k">if</span> <span class="n">rev</span> <span class="o">%</span> <span class="mi">100000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Processed </span><span class="si">{</span><span class="n">rev</span><span class="si">}</span><span class="s2"> reviews (</span><span class="si">{</span><span class="n">line_num</span><span class="si">}</span><span class="s2"> lines).&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">errorfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Exception in review </span><span class="si">{</span><span class="n">rev</span><span class="si">}</span><span class="s2">, line </span><span class="si">{</span><span class="n">line_num</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="n">errorfile</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Total reviews processed: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">reviews</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">reviews</span></div>
+
+
+<div class="viewcode-block" id="filter_bipart_graph">
+<a class="viewcode-back" href="../data_processing.html#data_processing.filter_bipart_graph">[docs]</a>
+<span class="k">def</span> <span class="nf">filter_bipart_graph</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">min_reviews</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Filter out nodes with too low degree from bipartiate graph.</span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        graph (nx.Graph): bipartite graph</span>
+<span class="sd">        min_reviews (int): minimal degree of nodes to keep</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        graph (nx.Graph): filtered graph</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">initial_product_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span> <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bipartite&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">initial_user_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span> <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bipartite&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">])</span>
+    
+    <span class="n">products_to_remove</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span> <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bipartite&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">graph</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">min_reviews</span>
+    <span class="p">]</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">remove_nodes_from</span><span class="p">(</span><span class="n">products_to_remove</span><span class="p">)</span>
+
+    <span class="n">users_to_remove</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span> <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bipartite&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">graph</span><span class="o">.</span><span class="n">degree</span><span class="p">(</span><span class="n">node</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span>
+    <span class="p">]</span>
+    <span class="n">graph</span><span class="o">.</span><span class="n">remove_nodes_from</span><span class="p">(</span><span class="n">users_to_remove</span><span class="p">)</span>
+
+    <span class="n">final_product_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span> <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bipartite&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">final_user_count</span> <span class="o">=</span> <span class="nb">len</span><span class="p">([</span><span class="n">node</span> <span class="k">for</span> <span class="n">node</span> <span class="ow">in</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span> <span class="k">if</span> <span class="n">graph</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">node</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;bipartite&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">])</span>
+
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Initial product count: </span><span class="si">{</span><span class="n">initial_product_count</span><span class="si">}</span><span class="s2">, final product count: </span><span class="si">{</span><span class="n">final_product_count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Initial user count: </span><span class="si">{</span><span class="n">initial_user_count</span><span class="si">}</span><span class="s2">, final user count: </span><span class="si">{</span><span class="n">final_user_count</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Removed </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">products_to_remove</span><span class="p">)</span><span class="si">}</span><span class="s2"> products and </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">users_to_remove</span><span class="p">)</span><span class="si">}</span><span class="s2"> users.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">graph</span></div>
+
+
+<div class="viewcode-block" id="create_bipartite_graph">
+<a class="viewcode-back" href="../data_processing.html#data_processing.create_bipartite_graph">[docs]</a>
+<span class="k">def</span> <span class="nf">create_bipartite_graph</span><span class="p">(</span><span class="n">reviews</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create bipartite graph from list of Review objects.</span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        reviews (list): list of Review objects</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        B (nx.Graph): bipartite graph of users conneted to products they reviewed</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="n">i</span><span class="o">=</span><span class="mi">0</span>
+    <span class="k">for</span> <span class="n">review</span> <span class="ow">in</span> <span class="n">reviews</span><span class="p">:</span>
+
+        <span class="c1">#print(review)</span>
+        <span class="n">B</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">review</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">bipartite</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="n">B</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">review</span><span class="o">.</span><span class="n">product_id</span><span class="p">,</span> <span class="n">bipartite</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">B</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">review</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">review</span><span class="o">.</span><span class="n">product_id</span><span class="p">,</span> <span class="n">review</span> <span class="o">=</span> <span class="n">review</span><span class="p">)</span>
+        <span class="n">i</span><span class="o">+=</span><span class="mi">1</span>
+        <span class="c1"># if i%100==0:</span>
+        <span class="c1">#     print(f&quot;{B[review.user_id][review.product_id]} edge added&quot;)</span>
+    <span class="k">return</span> <span class="n">B</span></div>
+
+
+<div class="viewcode-block" id="generate_product_projection">
+<a class="viewcode-back" href="../data_processing.html#data_processing.generate_product_projection">[docs]</a>
+<span class="k">def</span> <span class="nf">generate_product_projection</span><span class="p">(</span><span class="n">bipartite_graph</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Generate product projection from bipartite graph.</span>
+<span class="sd">    If two products were reviewed by the same user, they are connected in the projection. </span>
+<span class="sd">    If connction already exists, weight is increased by 1.</span>
+<span class="sd">    Parameters:</span>
+<span class="sd">        bipartite_graph (nx.Graph): bipartite graph of users connected to products they reviewed</span>
+<span class="sd">    Returns:</span>
+<span class="sd">        product_graph (nx.Graph): product projection graph</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">product_graph</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">()</span>
+    <span class="c1">#i=0</span>
+    <span class="n">users</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">bipartite_graph</span><span class="o">.</span><span class="n">nodes</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;A&quot;</span><span class="p">)]</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">users</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span><span class="n">user</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">users</span><span class="p">):</span>
+        <span class="c1">#print(user)</span>
+        <span class="n">rated</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">bipartite_graph</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">user</span><span class="p">))</span>
+        <span class="c1">#print(rated)</span>
+        <span class="k">for</span> <span class="n">p1</span><span class="p">,</span> <span class="n">p2</span> <span class="ow">in</span> <span class="n">combinations</span><span class="p">(</span><span class="n">rated</span><span class="p">,</span> <span class="mi">2</span><span class="p">):</span>
+            <span class="c1">#i+=1</span>
+            <span class="k">if</span> <span class="n">product_graph</span><span class="o">.</span><span class="n">has_edge</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">):</span>
+                <span class="n">product_graph</span><span class="p">[</span><span class="n">p1</span><span class="p">][</span><span class="n">p2</span><span class="p">][</span><span class="s1">&#39;weight&#39;</span><span class="p">]</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">product_graph</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">,</span> <span class="n">weight</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">i</span><span class="o">%</span><span class="mi">100</span><span class="o">==</span><span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Projecting bipartiate </span><span class="si">{</span><span class="n">i</span><span class="o">/</span><span class="n">total</span><span class="o">*</span><span class="mi">100</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2">% done&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">product_graph</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Cluster-based social network analysis for review graph</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, Fornal.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.1.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

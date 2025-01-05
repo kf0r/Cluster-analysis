@@ -60,7 +60,7 @@ if __name__ == "__main__":
     plot_statistics_community_sizes(review_graph, clusters)
 
     print("Plotting single community...")
-    #plot_single_community(review_graph, clusters)
+    plot_single_community(review_graph, clusters)
 
     print("Looking for central nodes...")
     save_central_nodes(review_graph, db_path)
