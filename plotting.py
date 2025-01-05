@@ -48,11 +48,17 @@ def plot_statistics_community_sizes(review_graph, clusters, output_dir="plots"):
         communities = {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
         sizes = [len(community) for community in communities.values()]
         means[method] = np.mean(sizes)
+        print(f"Method: {method}, mean: {means[method]}")
         std_devs[method] = np.std(sizes)
+        print(f"Method: {method}, std_dev: {std_devs[method]}")
         variances[method] = np.var(sizes)
+        print(f"Method: {method}, variance: {variances[method]}")
         medians[method] = np.median(sizes)
+        print(f"Method: {method}, median: {medians[method]}")
         modes[method] = statistics.mode(sizes)
+        print(f"Method: {method}, mode: {modes[method]}")
         modularities[method] = calculate_modularity(review_graph, cluster)
+        print(f"Method: {method}, modularity: {modularities[method]}")
     
     plot_from_data(modularities, "Modularność klastrów", "Metoda", "Modularność", output_dir)
     plot_from_data(means, "Średnia wielkość społeczności", "Metoda", "Średnia", output_dir)

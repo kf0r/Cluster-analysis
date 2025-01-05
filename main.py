@@ -20,10 +20,11 @@ if __name__ == "__main__":
         review_graph = generate_product_projection(B)
         #review_graph = nx.compose(review_graph, batch_graph)
         #print(f"Processed batch of {len(batch_reviews)} reviews.")
-        print(f"Graph size: {len(review_graph.nodes)} nodes, {len(review_graph.edges)} edges.")
+        
         save_graph(review_graph, graph_filename)
         print("Graph generated and saved to file")
-    
+
+    print(f"Graph size: {len(review_graph.nodes)} nodes, {len(review_graph.edges)} edges.")
     print("Applying clustering algorithms...")
     clusters = apply_clustering_algorithms(review_graph)
     print("Clustering algorithms applied.")
