@@ -3,6 +3,8 @@ import numpy as np
 import os
 import statistics
 from clustering import calculate_modularity
+import networkx as nx
+from utility import get_moderate_community
 
 def visualize_statistics(analysis):
     methods = list(analysis.keys())
@@ -21,9 +23,9 @@ def plot_community_sizes_distro(clusters):
     for method, cluster in clusters.items():
         communities = {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
         sizes = [len(community) for community in communities.values()]
-        print(f"Method: {method}")
+        #print(f"Method: {method}")
         #print(sizes)
-        plt.hist(sizes, bins=len(set(sizes)))
+        plt.hist(sizes, len(set(sizes)))
         plt.yscale('log')
         plt.title(f"Rozkład wielkości klastrów metody ({method})")
         plt.xlabel("Wielkość klastra")
@@ -71,3 +73,21 @@ def plot_from_data(data_dict, title, xlabel, ylabel, output_dir="plots"):
     print(f"Saving plot to {filename}")
     plt.savefig(filename)
     plt.close()
+
+def plot_single_community(graph, clusters):
+    for method, cluster in clusters.items():
+        community = get_moderate_community(cluster)
+        if community is None:
+            print(f"No moderate community found for method {method}")
+            continue
+        subgraph = graph.subgraph(community)
+        node_size = [3 * (1 + np.log(subgraph.degree[n])) for n in subgraph.nodes]
+        pos = nx.kamada_kawai_layout(subgraph)
+        print("Drawing subgraph")
+        plt.figure(figsize=(15, 15))
+        nx.draw(subgraph, pos, with_labels=False, node_size=node_size, width=0.3)
+        
+        plt.title(f"Przykładowa społeczność {method}")
+        plt.savefig(f"{method}/single_community.png")
+        plt.close()
+        print("Subgraph drawn and saved")

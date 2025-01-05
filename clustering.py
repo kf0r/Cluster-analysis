@@ -45,3 +45,18 @@ def analyze_clusters(clusters):
             'std_dev': np.std(sizes)
         }
     return analysis
+
+def analyze_centrality(G, amount=10):
+    degree_centrality = nx.degree_centrality(G)
+    print("Degree centrality calculated.")
+    closeness_centrality = nx.closeness_centrality(G)
+    print("Closeness centrality calculated.")
+    betweenness_centrality = nx.betweenness_centrality(G)
+    print("Betweenness centrality calculated.")
+    
+    results = {
+        "Degree Centrality": sorted(degree_centrality.items(), key=lambda x: x[1], reverse=True)[:amount],
+        "Betweenness Centrality": sorted(betweenness_centrality.items(), key=lambda x: x[1], reverse=True)[:amount],
+        "Closeness Centrality": sorted(closeness_centrality.items(), key=lambda x: x[1], reverse=True)[:amount]
+    }
+    return results

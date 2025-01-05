@@ -1,7 +1,8 @@
-from clustering import calculate_density
+from clustering import calculate_density, analyze_centrality
 import os
 import database
 import random
+import numpy as np
 
 def normalize_clusters(cluster):
     return {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
@@ -69,3 +70,36 @@ def save_communities(communities, db_path, prefix):
                     f.write(f"Product ID: {product_id}\n")
                     f.write("Metadata not found\n\n")
             print(f"Saved {prefix} {method} community {i} to {prefix}/{method}/community_{i}.txt")
+
+def save_central_nodes(G, db_path, amount=10, output_dir="centralities"):
+    results = analyze_centrality(G, amount)
+    os.makedirs(output_dir, exist_ok=True)
+    for measure, nodes in results.items():
+        filename = os.path.join(output_dir, f"{measure.replace(' ', '_').lower()}_centrality.txt")
+        with open(filename, 'w') as f:
+            for node, value in nodes:
+                product_metadata = database.get_metadata(node, db_path)
+                f.write(f"Centrality: {value}\n")
+                f.write(f"Product ID: {node}\n")
+                f.write(f"Title: {product_metadata.get('title', 'N/A')}\n")
+                f.write(f"Category: {product_metadata.get('main_category', 'N/A')}\n")
+                f.write(f"Average Rating: {product_metadata.get('average_rating', 'N/A')}\n")
+                f.write(f"Rating Number: {product_metadata.get('rating_number', 'N/A')}\n")
+                f.write("\n")
+        print(f"{measure} saved to {filename}")
+
+def get_moderate_community(cluster):
+    communities = normalize_clusters(cluster)
+    sizes = [len(community) for community in communities.values()]
+    mean_size = np.mean(sizes)
+    std_dev = np.std(sizes)
+    biggest_yet = 0
+    index = 0
+    for idx, community in communities.items():
+        #print(idx)
+        if len(community) > biggest_yet and len(community) < mean_size + std_dev:
+            
+            biggest_yet = len(community)
+            index = idx
+    #print(f"Biggest yet: {biggest_yet}")
+    return communities.get(index, None)

@@ -239,7 +239,7 @@ def plot_community_sizes_distro(clusters):
         #plt.show()
         plt.close()
 
-def plot_statistics_community_sizes(clusters, output_dir="plots"):
+def plot_statistics_community_sizes(review_graph, clusters, output_dir="plots"):
     os.makedirs(output_dir, exist_ok=True)
     means = {}
     std_devs = {}

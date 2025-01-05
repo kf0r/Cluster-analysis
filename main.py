@@ -1,11 +1,11 @@
 import networkx as nx
 from data_processing import load_graph, process_reviews, create_bipartite_graph, filter_bipart_graph, generate_product_projection, save_graph
 from clustering import apply_clustering_algorithms
-from plotting import plot_community_sizes_distro, plot_statistics_community_sizes
-from utility import find_dense, find_largest, save_communities, find_random
+from plotting import plot_community_sizes_distro, plot_statistics_community_sizes, plot_single_community
+from utility import find_dense, find_largest, save_communities, find_random, save_central_nodes
 
 if __name__ == "__main__":
-    input_path = 'castrated.json'
+    input_path = 'books.json'
     db_path = 'metadata.db'
     graph_filename = 'review_graph.pkl'
     try:
@@ -41,13 +41,13 @@ if __name__ == "__main__":
     save_communities(largest, db_path, "largest")
     print("Largest communities saved.")
     save_communities(smallest, db_path, "smallest")
-    print("Smallest communities saved.")
+    print("Smallest communities saved")
     save_communities(medium, db_path, "medium")
-    print("Medium communities saved.")
+    print("Medium communities saved")
     save_communities(dense, db_path, "dense")
-    print("Dense communities saved.")
+    print("Dense communities saved")
     save_communities(randos, db_path, "random")
-    print("Random communities saved.")
+    print("Random communities saved")
 
     print("Plotting community size distribution...")
     plot_community_sizes_distro(clusters)
@@ -57,3 +57,9 @@ if __name__ == "__main__":
     print("Standard deviation community size graph...")
     print("Calculating modularity...")
     plot_statistics_community_sizes(review_graph, clusters)
+
+    print("Plotting single community...")
+    plot_single_community(review_graph, clusters)
+
+    print("Looking for central nodes...")
+    save_central_nodes(review_graph, db_path)
