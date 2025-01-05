@@ -20,6 +20,13 @@ from utility import get_moderate_community
 #     plt.show()
 
 def plot_community_sizes_distro(clusters):
+    '''
+    Plot community sizes distribution for each clustering algorithm using matplotlib.
+    Parameters:
+        clusters (dict): dictionary where keys are method names, values are partition results.
+    Returns:
+        None
+    '''
     for method, cluster in clusters.items():
         communities = {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
         sizes = [len(community) for community in communities.values()]
@@ -37,6 +44,16 @@ def plot_community_sizes_distro(clusters):
         plt.close()
 
 def plot_statistics_community_sizes(review_graph, clusters, output_dir="plots"):
+    '''
+    Plot statistics of community sizes for each clustering algorithm using matplotlib.
+    Statistics are mean, standard deviation, variance, median and mode. Modularity is also plotted.
+    Parameters:
+        review_graph (nx.Graph): graph to analyze
+        clusters (dict): dictionary where keys are method names, values are partition results.
+        output_dir (str): directory to save plots
+    Returns:
+        None
+    '''
     os.makedirs(output_dir, exist_ok=True)
     means = {}
     std_devs = {}
@@ -68,6 +85,18 @@ def plot_statistics_community_sizes(review_graph, clusters, output_dir="plots"):
     plot_from_data(modes, "Dominanta wielkości społeczności", "Metoda", "Dominanta", output_dir)
 
 def plot_from_data(data_dict, title, xlabel, ylabel, output_dir="plots"):
+    '''
+    Plot and save data from dictionary using matplotlib.
+    Parameters: 
+        data_dict (dict): dictionary where keys are x-axis labels, values are y-axis values
+        title (str): title of the plot
+        xlabel (str): label of x-axis
+        ylabel (str): label of y-axis
+        output_dir (str): directory to save plot
+    Returns:
+        None
+    '''
+    
     plt.figure(figsize=(10, 6))
     methods = list(data_dict.keys())
     values = list(data_dict.values())
@@ -81,6 +110,15 @@ def plot_from_data(data_dict, title, xlabel, ylabel, output_dir="plots"):
     plt.close()
 
 def plot_single_community(graph, clusters):
+    '''
+    Plot single community for each clustering algorithm using matplotlib.
+    Community is chosen as the one within a standard deviation of the mean size.
+    Parameters:
+        graph (nx.Graph): graph to analyze
+        clusters (dict): dictionary where keys are method names, values are partition results.
+    Returns:
+        None
+    '''
     for method, cluster in clusters.items():
         community = get_moderate_community(cluster)
         if community is None:

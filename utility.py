@@ -5,14 +5,35 @@ import random
 import numpy as np
 
 def jaccard_similarity(set1, set2):
+    '''
+    Calculate Jaccard index of two sets.
+    If both sets are empty, return 0.
+    Parameters:
+        set1 (set): first set
+        set2 (set): second set
+    Returns:
+        jaccard_index (float): Jaccard index of two sets
+    '''
     if len(set1.union(set2)) == 0:
         return 0
     return len(set1.intersection(set2)) / len(set1.union(set2))
 
 def normalize_clusters(cluster):
+    '''
+    Normalize cluster dictionary, starting dictionary has nodes as keys and communities as values
+    Returns dictionary where keys are communities identifiers, values are lists of nodes in that community.
+    Parameters:
+        cluster (dict): dictionary where keys are nodes, values are community assignments
+    Returns:
+        normalized_cluster (dict): dictionary where keys are community identifiers, values are lists of nodes in that community
+    Examples:
+        cluster = {1: 0, 2: 0, 3: 1, 4: 1}
+        normalize_clusters(cluster) -> {0: [1, 2], 1: [3, 4]}
+    '''
     return {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
 
 def find_dense(G, clusters, num_communities=10):
+
     densest_communities = {}
     for method, cluster in clusters.items():
         communities = normalize_clusters(cluster)
@@ -92,9 +113,9 @@ def save_central_nodes(G, db_path, amount=10, output_dir="centralities"):
                 f.write(f"Rating Number: {product_metadata.get('rating_number', 'N/A')}\n")
                 f.write("\n")
         print(f"{measure} saved to {filename}")
-    compare_centralities(G, results)
+    compare_centralities(results)
 
-def compare_centralities(G,results, amount=10):
+def compare_centralities(results, amount=10):
     
     metrics = list(results.keys())
     for i in range(len(metrics)):

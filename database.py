@@ -2,6 +2,14 @@ import sqlite3
 import json
 
 def create_metadata_db(json_path, db_path):
+    '''
+    Create SQLite database with metadata from JSONL file.
+    Parameters:
+        json_path (str): path to JSONL file with metadata
+        db_path (str): path to SQLite database
+    Returns:
+        None
+    '''
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS metadata (
@@ -37,6 +45,14 @@ def create_metadata_db(json_path, db_path):
     conn.close()
 
 def get_metadata(product_id, db_path):
+    '''
+    Get metadata for a product from the database.
+    Parameters:
+        product_id (str): ASIN of product
+        db_path (str): path to SQLite database
+    Returns:
+        metadata (json): metadata for quered product
+    '''
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
     c.execute('SELECT data FROM metadata WHERE asin = ?', (product_id,))

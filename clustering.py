@@ -4,6 +4,13 @@ from cdlib import algorithms
 import numpy as np
 
 def apply_clustering_algorithms(G):
+    '''
+    Apply clustering algorithms to provided graph G.
+    Parameters:
+        G (nx.Graph): graph to partition
+    Returns: 
+        clusters (dict): dictionary where keys are method names, values are partition results.
+    '''
     clusters = {}
     print("Applying Louvain clustering...")
     louvain_partition = community_louvain.best_partition(G)
@@ -24,13 +31,37 @@ def apply_clustering_algorithms(G):
     return clusters
 
 def calculate_modularity(G, partition):
+    '''
+    Calculate modularity of given partition of graph G.
+    Parameters:
+        G (nx.Graph): partitioned graph
+        partition (dict): dictionary where keys are nodes, values are community assignments
+    Returns:
+        modularity (float): modularity of given partition
+    '''
     return community_louvain.modularity(partition, G)
 
 def calculate_density(G, community):
+    '''
+    Calculate density of given community in graph G.
+    Density is defined as number of edges divided by number of all possible edges in a clique of the same size.
+    Parameters:
+        G (nx.Graph): graph containing community
+        community (list): list of nodes in community
+    Returns:
+        density (float): density of community as a subgraph of G
+    '''
     subgraph = G.subgraph(community)
     return nx.density(subgraph)
 
 def analyze_clusters(clusters):
+    '''
+    Analyze clusters in statistical terms.
+    Parameters:
+        clusters (dict): dictionary where keys are method names, values are partition results.
+    Returns:
+        analysis (dict): dictionary where keys are method names, values are dictionaries with mean, variance and standard deviation of community sizes.
+    '''
     analysis = {}
     for method, cluster in clusters.items():
         if isinstance(cluster, dict):
@@ -47,6 +78,14 @@ def analyze_clusters(clusters):
     return analysis
 
 def analyze_centrality(G, amount=10):
+    '''
+    Analyze centrality measures of nodes in graph G.
+    Parameters:
+        G (nx.Graph): graph to analyze
+        amount (int): number of top nodes to return
+    Returns:
+        results (dict): dictionary where keys are centrality measures, values are lists of tuples (node, centrality value)
+    '''
     degree_centrality = nx.degree_centrality(G)
     print("Degree centrality calculated.")
     closeness_centrality = nx.closeness_centrality(G)

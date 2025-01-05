@@ -5,17 +5,40 @@ from review import Review
 from itertools import combinations
 
 def save_graph(graph, filename):
+    '''
+    Save graph to file.
+    Parameters:
+        graph (nx.Graph): graph to save
+        filename (str): path to file
+    Returns: 
+        None
+    '''
     with open(filename, 'wb') as f:
         pickle.dump(graph, f)
     print(f"Graph saved to {filename}")
 
 def load_graph(filename):
+    '''
+    Load graph from file.
+    Parameters:
+        filename (str): path to file with saved graph
+    Returns: 
+        graph(nx.Graph): loaded graph
+    '''
     with open(filename, 'rb') as f:
         graph = pickle.load(f)
     print(f"Graph loaded from {filename}")
     return graph
 
 def process_reviews(input_path, error_log="error_lines.txt"):
+    '''
+    Process reviews from JSON input file to list of Review objects.
+    Parameters:
+        input_path (str): path to input file
+        error_log (str): path to error log file
+    Returns: 
+        reviews (list): list of Review objects
+    '''
     reviews = []
     rev = 0
 
@@ -44,6 +67,14 @@ def process_reviews(input_path, error_log="error_lines.txt"):
     return reviews
 
 def filter_bipart_graph(graph, min_reviews=3):
+    '''
+    Filter out nodes with too low degree from bipartiate graph.
+    Parameters:
+        graph (nx.Graph): bipartite graph
+        min_reviews (int): minimal degree of nodes to keep
+    Returns:
+        graph (nx.Graph): filtered graph
+    '''
     initial_product_count = len([node for node in graph.nodes if graph.nodes[node].get("bipartite") == 1])
     initial_user_count = len([node for node in graph.nodes if graph.nodes[node].get("bipartite") == 0])
     
@@ -66,6 +97,13 @@ def filter_bipart_graph(graph, min_reviews=3):
     return graph
 
 def create_bipartite_graph(reviews):
+    '''
+    Create bipartite graph from list of Review objects.
+    Parameters:
+        reviews (list): list of Review objects
+    Returns:
+        B (nx.Graph): bipartite graph of users conneted to products they reviewed
+    '''
     B = nx.Graph()
     i=0
     for review in reviews:
@@ -80,6 +118,15 @@ def create_bipartite_graph(reviews):
     return B
 
 def generate_product_projection(bipartite_graph):
+    '''
+    Generate product projection from bipartite graph.
+    If two products were reviewed by the same user, they are connected in the projection. 
+    If connction already exists, weight is increased by 1.
+    Parameters:
+        bipartite_graph (nx.Graph): bipartite graph of users connected to products they reviewed
+    Returns:
+        product_graph (nx.Graph): product projection graph
+    '''
     product_graph = nx.Graph()
     #i=0
     users = [n for n in bipartite_graph.nodes if n.startswith("A")]
