@@ -4,6 +4,11 @@ import database
 import random
 import numpy as np
 
+def jaccard_similarity(set1, set2):
+    if len(set1.union(set2)) == 0:
+        return 0
+    return len(set1.intersection(set2)) / len(set1.union(set2))
+
 def normalize_clusters(cluster):
     return {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
 
@@ -87,6 +92,20 @@ def save_central_nodes(G, db_path, amount=10, output_dir="centralities"):
                 f.write(f"Rating Number: {product_metadata.get('rating_number', 'N/A')}\n")
                 f.write("\n")
         print(f"{measure} saved to {filename}")
+    compare_centralities(G, results)
+
+def compare_centralities(G,results, amount=10):
+    
+    metrics = list(results.keys())
+    for i in range(len(metrics)):
+        for j in range(i+1, len(metrics)):
+            metric1 = metrics[i]
+            metric2 = metrics[j]
+            nodes1 = set([node for node, _ in results[metric1]])
+            nodes2 = set([node for node, _ in results[metric2]])
+            similarity = jaccard_similarity(nodes1, nodes2)
+            print(f"Similarity between {metric1} and {metric2}: {similarity}")
+        
 
 def get_moderate_community(cluster):
     communities = normalize_clusters(cluster)

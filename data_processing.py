@@ -43,7 +43,7 @@ def process_reviews(input_path, error_log="error_lines.txt"):
     print(f"Total reviews processed: {len(reviews)}")
     return reviews
 
-def filter_bipart_graph(graph, min_reviews=5):
+def filter_bipart_graph(graph, min_reviews=3):
     initial_product_count = len([node for node in graph.nodes if graph.nodes[node].get("bipartite") == 1])
     initial_user_count = len([node for node in graph.nodes if graph.nodes[node].get("bipartite") == 0])
     

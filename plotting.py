@@ -6,18 +6,18 @@ from clustering import calculate_modularity
 import networkx as nx
 from utility import get_moderate_community
 
-def visualize_statistics(analysis):
-    methods = list(analysis.keys())
-    means = [analysis[method]['mean'] for method in methods]
-    variances = [analysis[method]['variance'] for method in methods]
-    std_devs = [analysis[method]['std_dev'] for method in methods]
+# def visualize_statistics(analysis):
+#     methods = list(analysis.keys())
+#     means = [analysis[method]['mean'] for method in methods]
+#     variances = [analysis[method]['variance'] for method in methods]
+#     std_devs = [analysis[method]['std_dev'] for method in methods]
 
-    plt.figure(figsize=(10, 6))
-    plt.bar(methods, means, yerr=std_devs, capsize=5)
-    plt.xlabel('Clustering Method')
-    plt.ylabel('Cluster Size')
-    plt.title('Cluster Size Statistics')
-    plt.show()
+#     plt.figure(figsize=(10, 6))
+#     plt.bar(methods, means, yerr=std_devs, capsize=5)
+#     plt.xlabel('Clustering Method')
+#     plt.ylabel('Cluster Size')
+#     plt.title('Cluster Size Statistics')
+#     plt.show()
 
 def plot_community_sizes_distro(clusters):
     for method, cluster in clusters.items():

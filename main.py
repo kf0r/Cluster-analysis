@@ -2,7 +2,7 @@ import networkx as nx
 from data_processing import load_graph, process_reviews, create_bipartite_graph, filter_bipart_graph, generate_product_projection, save_graph
 from clustering import apply_clustering_algorithms
 from plotting import plot_community_sizes_distro, plot_statistics_community_sizes, plot_single_community
-from utility import find_dense, find_largest, save_communities, find_random, save_central_nodes
+from utility import find_dense, find_largest, save_communities, find_random, save_central_nodes, compare_centralities
 
 if __name__ == "__main__":
     input_path = 'books.json'
@@ -59,7 +59,7 @@ if __name__ == "__main__":
     plot_statistics_community_sizes(review_graph, clusters)
 
     print("Plotting single community...")
-    plot_single_community(review_graph, clusters)
+    #plot_single_community(review_graph, clusters)
 
     print("Looking for central nodes...")
     save_central_nodes(review_graph, db_path)
