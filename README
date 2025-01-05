@@ -1,5 +1,43 @@
-Analiza statystyczna grafu spolecznosciowego:    
-mam graf wszystkich recenzji filmów na Amazonie od 1997 do 2012, pierwotny graf jest dwudzielny w relacji uzytkownik - oceniony film. Zawiera 81mln wierzchołkow i plik tekstowy wazy 9GB, wiec nie bede go umieszczal na gicie. 
-Tworze takze grafy będące projekcjami tego grafu, tj filmy w relacji jeśli dwóch uzytkownikow je oceniło, to istnieje krawedz oraz gdy dwóch uzytkownikow ocenilo
-ten sam film to istnieje krawędz. Graf ten jest ciekawszy od facebooka lub twittera, poniewaz mam dostep do subiektywnych recenzji i ocen tych uzytkownikow. Planuje sprawdzic w jakis sposob, czy zwrocone spolecznosci maja jakies charakterystyczne cechy jak np podobny gatunek w przypadku grafu filmow lub podobny sposob oceniania (pozytywny lub negatywny) w przypadku grafu uzytkownikow. Badam tez trend srednich ocen na przestrzeni czasu. Chce takze sprawdzic sposoby rekomendacji filmow uzytkownikowi na podstawie polecania filmow z jednego klastru.     
-Planuje takze na grafie facebooka sprawdzic sposoby rekomendacji znajomych poprzez usuniecie czesci krawedzi i sprawdzenia ktory algorytm (nie tylko klastrujacy, ale takze proste sposoby jak Jaccard Index) przewiduje połączenia i zrobic wykres procenta prawidlowo przewidzianych polaczen w zaleznosci od procenta usunietych polaczen.
+# Cluster-Based Social Network Analysis for Review Graph
+# Overview
+Social network analysis project to find clusters of high modularity in graph representing reviews that are user-product relation.
+
+Key Features:
+-Extracting reviews from JSON dataset
+-Projecting bipartiate graph to unipartiate weighted graph of reviews
+-Clustering graph with Louvain, Leiden and Label Propagation algorithms
+-Analysing and plotting statistics of clusters
+-Saving clusters for further analysis
+-Finding most important nodes in graph
+
+# Requirements:
+-Python 3.6 or higher
+-networkx==3.3
+-matplotlib==3.9.0
+-numpy==2.0.0
+-python-louvain==0.16
+-leidenalg==0.10.2
+-cdlib==0.4.0
+-textblob==0.18.0.post0
+
+These are included in the requirements.txt file. To install them, run 'pip install -r requirements.txt' in the terminal.
+For generating documentation, you need to install sphinx using 'pip install sphinx.'
+You also need datasets in JSON format in the data directory. You can get them here: https://nijianmo.github.io/amazon/index.html
+Citation: Justifying recommendations using distantly-labeled reviews and fined-grained aspects
+Jianmo Ni, Jiacheng Li, Julian McAuley
+Empirical Methods in Natural Language Processing (EMNLP), 2019
+
+# Installation
+1. run 'pip install -r requirements.txt' in the terminal to install required packages.
+2. run 'pip install sphinx' to install sphinx for generating documentation.
+3. Download datasets in JSON format from https://nijianmo.github.io/amazon/index.html and put them in the data directory.
+4. Run 'database.py' to build a database od metadata. Make sure that path to dataset is correct in your usage.
+5. Run 'main.py' to start the program.
+When running scripts you should be in the src directory to ensure that paths are correct.
+
+# Dataflow:
+If its first time runnim main.py, it will preprocess data and build a graph, that will be saved in the data directory.
+If graph is already built, it will load it from the data directory. Make sure to remove review_graph.pkl from the data directory if you want to rebuild the graph.
+Then, graph will be clustered using Louvain, Leiden and Label Propagation algorithms.
+Clusters will be saved, analysed in terms of statistics and plotted.
+Most important nodes in the graph will be found and saved.
