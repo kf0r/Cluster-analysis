@@ -34,41 +34,61 @@ def normalize_clusters(cluster):
 
 def find_dense(G, clusters, num_communities=10):
     '''
-    Find densest communities
+    Find densest communities for each method in clusters dictionary.
+    Parameters:
+        G (nx.Graph): graph to analyze
+        clusters (dict): dictionary where keys are method names, values are partition results.
+        num_communities (int): number of densest communities to return
+    Returns:
+        densest_communities (dict): dictionary where keys are method names, values are lists of tuples (community, density)
     '''
     densest_communities = {}
     for method, cluster in clusters.items():
         communities = normalize_clusters(cluster)
         
-        # Calculate density for each community
         community_densities = []
         for idx, community in communities.items():
             density = calculate_density(G, community)
             community_densities.append(community)
         
-        # Sort communities by density and select the top ones
         densest_communities[method] = sorted(community_densities, key=lambda x: x[1], reverse=True)[:num_communities]
     return densest_communities
         
 def find_largest(clusters, num_communities=10):
+    '''
+    Find largest, medium and smallest communities for each method in clusters dictionary.
+    Parameters:
+        clusters (dict): dictionary where keys are method names, values are partition results.
+        num_communities (int): number of communities to return
+    Returns:
+        largest_communities (dict): dictionary where keys are method names, values are lists of largest communities
+        smallest_communities (dict): dictionary where keys are method names, values are lists of smallest communities
+        medium_communities (dict): dictionary where keys are method names, values are lists of medium communities
+    '''
     largest_communities = {}
     smallest_communities = {}
     medium_communities = {}
     for method, cluster in clusters.items():
         communities = normalize_clusters(cluster)
         
-        # Calculate size for each community
         community_sizes = []
         for idx, community in communities.items():
             community_sizes.append(community)
         
-        # Sort communities by size and select the top ones
         largest_communities[method] = sorted(community_sizes, key=lambda x: len(x), reverse=True)[:num_communities]
         smallest_communities[method] = sorted(community_sizes, key=lambda x: len(x))[:num_communities]
         medium_communities[method] = sorted(community_sizes, key=lambda x: len(x))[num_communities//2:num_communities//2+num_communities]
     return largest_communities, smallest_communities, medium_communities
 
 def find_random(clusters, num_communities=10):
+    '''
+    Find random communities for each method in clusters dictionary.
+    Parameters:
+        clusters (dict): dictionary where keys are method names, values are partition results.
+        num_communities (int): number of communities to return
+    Returns:
+        random_communities (dict): dictionary where keys are method names, values are lists of random communities
+    '''
     random_communities = {}
     for method, cluster in clusters.items():
         communities = normalize_clusters(cluster)
@@ -77,6 +97,14 @@ def find_random(clusters, num_communities=10):
     return random_communities
 
 def save_communities(communities, db_path, prefix):
+    '''
+    Save product metadata of communities to files.
+    Parameters:
+        communities (dict): dictionary where keys are method names, values are lists of communities
+        db_path (str): path to SQLite database
+        prefix (str): prefix for output directory
+    Returns:
+        None'''
     for method, community_list in communities.items():
         for i, community in enumerate(community_list):
             directory = f"../output/{method}/{prefix}"
@@ -100,6 +128,15 @@ def save_communities(communities, db_path, prefix):
             print(f"Saved {prefix} {method} community {i} to {prefix}/{method}/community_{i}.txt")
 
 def save_central_nodes(G, db_path, amount=10, output_dir="../output/centralities"):
+    '''
+    Save most central nodes in graph to files.
+    Finds most central nodes using degree, closeness and betweenness centrality and saves them to files.
+    Parameters:
+        G (nx.Graph): graph to analyze
+        db_path (str): path to SQLite database
+    Returns:
+        None
+    '''
     results = analyze_centrality(G, amount)
     os.makedirs(output_dir, exist_ok=True)
     for measure, nodes in results.items():
@@ -118,7 +155,14 @@ def save_central_nodes(G, db_path, amount=10, output_dir="../output/centralities
     compare_centralities(results)
 
 def compare_centralities(results):
-    
+    '''
+    Compare central nodes found using different centrality measures by calculating Jaccard similarity.
+    Jaccard similarity is calculated as intersection of nodes found by two measures divided by union of nodes found by two measures.
+    Parameters:
+        results (dict): dictionary where keys are centrality measures, values are lists of tuples (node, centrality value)
+    Returns:
+        None
+    '''
     metrics = list(results.keys())
     for i in range(len(metrics)):
         for j in range(i+1, len(metrics)):
@@ -131,17 +175,21 @@ def compare_centralities(results):
         
 
 def get_moderate_community(cluster):
+    '''
+    Get moderate community from cluster.
+    Looks for communities with size good for representation
+    Parameters:
+        cluster (dict): dictionary where keys are nodes, values are community assignments   
+    Returns:
+        community (list): list of nodes in community
+    '''
     communities = normalize_clusters(cluster)
     sizes = [len(community) for community in communities.values()]
-    mean_size = np.mean(sizes)
-    std_dev = np.std(sizes)
-    biggest_yet = 0
-    index = 0
+    # mean_size = np.mean(sizes)
+    # std_dev = np.std(sizes)
+    # biggest_yet = 0
+    # index = 0
     for idx, community in communities.items():
-        #print(idx)
-        if len(community) > biggest_yet and len(community) < mean_size + std_dev:
-            
-            biggest_yet = len(community)
-            index = idx
-    #print(f"Biggest yet: {biggest_yet}")
-    return communities.get(index, None)
+        if len(community) > 30 and len(community) < 1000:
+            return community
+    return None

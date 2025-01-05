@@ -124,6 +124,7 @@ def plot_single_community(graph, clusters, output_dir="../output"):
         if community is None:
             print(f"No moderate community found for method {method}")
             continue
+        print(f"Moderate community of size {len(community)} found for method {method}")
         subgraph = graph.subgraph(community)
         node_size = [3 * (1 + np.log(subgraph.degree[n])) for n in subgraph.nodes]
         pos = nx.kamada_kawai_layout(subgraph)
