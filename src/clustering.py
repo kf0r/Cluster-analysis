@@ -88,14 +88,17 @@ def analyze_centrality(G, amount=10):
     '''
     degree_centrality = nx.degree_centrality(G)
     print("Degree centrality calculated.")
-    closeness_centrality = nx.closeness_centrality(G)
-    print("Closeness centrality calculated.")
-    betweenness_centrality = nx.betweenness_centrality(G)
-    print("Betweenness centrality calculated.")
+    centrality = nx.eigenvector_centrality(G, max_iter=1000, tol=1e-06)
+    print("Eigenvector centrality calculated.")
+    # closeness_centrality = nx.closeness_centrality(G)
+    # print("Closeness centrality calculated.")
+    # betweenness_centrality = nx.betweenness_centrality(G)
+    # print("Betweenness centrality calculated.")
     
     results = {
         "Degree Centrality": sorted(degree_centrality.items(), key=lambda x: x[1], reverse=True)[:amount],
-        "Betweenness Centrality": sorted(betweenness_centrality.items(), key=lambda x: x[1], reverse=True)[:amount],
-        "Closeness Centrality": sorted(closeness_centrality.items(), key=lambda x: x[1], reverse=True)[:amount]
+        "Eigenvector Centrality": sorted(centrality.items(), key=lambda x: x[1], reverse=True)[:amount],
+        # "Betweenness Centrality": sorted(betweenness_centrality.items(), key=lambda x: x[1], reverse=True)[:amount],
+        # "Closeness Centrality": sorted(closeness_centrality.items(), key=lambda x: x[1], reverse=True)[:amount]
     }
     return results

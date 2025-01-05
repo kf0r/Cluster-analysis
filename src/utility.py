@@ -174,7 +174,7 @@ def compare_centralities(results):
             print(f"Similarity between {metric1} and {metric2}: {similarity}")
         
 
-def get_moderate_community(cluster):
+def get_moderate_community(cluster, min_size=30, max_size=200):
     '''
     Get moderate community from cluster.
     Looks for communities with size good for representation
@@ -190,6 +190,6 @@ def get_moderate_community(cluster):
     # biggest_yet = 0
     # index = 0
     for idx, community in communities.items():
-        if len(community) > 30 and len(community) < 1000:
+        if len(community) > min_size and len(community) < max_size:
             return community
     return None

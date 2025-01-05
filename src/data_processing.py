@@ -141,6 +141,6 @@ def generate_product_projection(bipartite_graph):
                 product_graph[p1][p2]['weight'] += 1
             else:
                 product_graph.add_edge(p1, p2, weight=1)
-        if i%100==0:
+        if i%10000==0:
             print(f"Projecting bipartiate {i/total*100:.2f}% done")
     return product_graph
