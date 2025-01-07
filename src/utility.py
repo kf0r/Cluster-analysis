@@ -49,7 +49,7 @@ def find_dense(G, clusters, num_communities=10):
         community_densities = []
         for idx, community in communities.items():
             density = calculate_density(G, community)
-            community_densities.append(community, density)
+            community_densities.append((community, density))
         
         densest_communities[method] = [community for community, _ in sorted(community_densities, key=lambda x: x[1], reverse=True)[:num_communities]]
     return densest_communities
@@ -77,9 +77,9 @@ def find_largest(clusters, num_communities=10):
 
         sorted_by_size = sorted(community_sizes, key=lambda x: len(x))
         
-        largest_communities[method] = sorted(community_sizes, key=lambda x: len(x), reverse=True)[-num_communities:]
-        smallest_communities[method] = sorted(community_sizes, key=lambda x: len(x))[:num_communities]
-        medium_communities[method] = sorted(community_sizes, key=lambda x: len(x))[num_communities//2:num_communities//2+num_communities]
+        largest_communities[method] = sorted_by_size[-num_communities:]
+        smallest_communities[method] = sorted_by_size[:num_communities]
+        medium_communities[method] = sorted_by_size[num_communities//2:num_communities//2+num_communities]
     return largest_communities, smallest_communities, medium_communities
 
 def find_random(clusters, num_communities=10):
