@@ -40,7 +40,7 @@ def find_dense(G, clusters, num_communities=10):
         clusters (dict): dictionary where keys are method names, values are partition results.
         num_communities (int): number of densest communities to return
     Returns:
-        densest_communities (dict): dictionary where keys are method names, values are lists of tuples (community, density)
+        densest_communities (dict): dictionary where keys are method names, values are communities
     '''
     densest_communities = {}
     for method, cluster in clusters.items():
@@ -49,9 +49,9 @@ def find_dense(G, clusters, num_communities=10):
         community_densities = []
         for idx, community in communities.items():
             density = calculate_density(G, community)
-            community_densities.append(community)
+            community_densities.append(community, density)
         
-        densest_communities[method] = sorted(community_densities, key=lambda x: x[1], reverse=True)[:num_communities]
+        densest_communities[method] = [community for community, _ in sorted(community_densities, key=lambda x: x[1], reverse=True)[:num_communities]]
     return densest_communities
         
 def find_largest(clusters, num_communities=10):
@@ -74,8 +74,10 @@ def find_largest(clusters, num_communities=10):
         community_sizes = []
         for idx, community in communities.items():
             community_sizes.append(community)
+
+        sorted_by_size = sorted(community_sizes, key=lambda x: len(x))
         
-        largest_communities[method] = sorted(community_sizes, key=lambda x: len(x), reverse=True)[:num_communities]
+        largest_communities[method] = sorted(community_sizes, key=lambda x: len(x), reverse=True)[-num_communities:]
         smallest_communities[method] = sorted(community_sizes, key=lambda x: len(x))[:num_communities]
         medium_communities[method] = sorted(community_sizes, key=lambda x: len(x))[num_communities//2:num_communities//2+num_communities]
     return largest_communities, smallest_communities, medium_communities
@@ -174,7 +176,7 @@ def compare_centralities(results):
             print(f"Similarity between {metric1} and {metric2}: {similarity}")
         
 
-def get_moderate_community(cluster, min_size=30, max_size=200):
+def get_moderate_community(cluster, min_size=5, max_size=100):
     '''
     Get moderate community from cluster.
     Looks for communities with size good for representation

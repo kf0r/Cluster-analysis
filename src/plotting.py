@@ -30,10 +30,23 @@ def plot_community_sizes_distro(clusters, output_dir="../output"):
     for method, cluster in clusters.items():
         communities = {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
         sizes = [len(community) for community in communities.values()]
-        #print(f"Method: {method}")
-        #print(sizes)
-        plt.hist(sizes, len(set(sizes)))
+        # print(f"Method: {method}")
+        # print(sizes)
+        # plt.hist(sizes, len(set(sizes)))
+
+        size_counts = {size: sizes.count(size) for size in set(sizes)}
+
+        sorted_sizes = sorted(size_counts.keys())
+        sorted_counts = [size_counts[size] for size in sorted_sizes]
+
+        print(f"Method: {method}")
+        print(f"Sizes: {sorted_sizes}")
+        print(f"Counts: {sorted_counts}")
+
+        plt.plot(sorted_sizes, sorted_counts, marker='o', linestyle='-', label=method)
+
         plt.yscale('log')
+        plt.xscale('log')
         plt.title(f"Rozkład wielkości klastrów metody ({method})")
         plt.xlabel("Wielkość klastra")
         plt.ylabel("Ilość klastrów")

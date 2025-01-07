@@ -66,7 +66,7 @@ def process_reviews(input_path, error_log="../output/error_lines.txt"):
     print(f"Total reviews processed: {len(reviews)}")
     return reviews
 
-def filter_bipart_graph(graph, min_reviews=3):
+def filter_bipart_graph(graph, min_reviews=2):
     '''
     Filter out nodes with too low degree from bipartiate graph.
     Parameters:
