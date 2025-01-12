@@ -15,7 +15,10 @@ def create_metadata_db(json_path, db_path):
     c.execute('''CREATE TABLE IF NOT EXISTS metadata (
                     asin TEXT PRIMARY KEY,
                     main_category TEXT,
+                    subcategories TEXT,
                     title TEXT,
+                    subtitle TEXT,
+                    author_name TEXT,
                     average_rating REAL,
                     rating_number INTEGER,
                     data TEXT
@@ -30,12 +33,15 @@ def create_metadata_db(json_path, db_path):
                 asin = item.get('parent_asin')
                 main_category = item.get('main_category')
                 title = item.get('title')
+                subtitle = item.get('subtitle')
+                author_name = item.get('author', {}).get('name')
+                subcategories = ', '.join(item.get('categories', []))
                 average_rating = item.get('average_rating')
                 rating_number = item.get('rating_number')
                 data = json.dumps(item)
-                c.execute('''INSERT OR REPLACE INTO metadata (asin, main_category, title, average_rating, rating_number, data)
-                             VALUES (?, ?, ?, ?, ?, ?)''',
-                          (asin, main_category, title, average_rating, rating_number, data))
+                c.execute('''INSERT OR REPLACE INTO metadata (asin, main_category, title, subtitle, author_name, subcategories, average_rating, rating_number, data)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                          (asin, main_category, title, subtitle, author_name, subcategories, average_rating, rating_number, data))
             except json.JSONDecodeError as e:
                 print(f"Error decoding JSON: {e}")
             if i%10000==0:

@@ -125,9 +125,12 @@ def save_communities(communities, db_path, prefix):
                         if product_metadata:
                             f.write(f"Product ID: {product_id}\n")
                             f.write(f"Title: {product_metadata.get('title', 'N/A')}\n")
+                            f.write(f"Subtitle: {product_metadata.get('subtitle', 'N/A')}\n")
                             f.write(f"Category: {product_metadata.get('main_category', 'N/A')}\n")
+                            f.write(f"Subcategories: {product_metadata.get('categories', 'N/A')}\n")
                             f.write(f"Average Rating: {product_metadata.get('average_rating', 'N/A')}\n")
                             f.write(f"Rating Number: {product_metadata.get('rating_number', 'N/A')}\n")
+                            f.write(f"Bought from: {product_metadata.get('store', 'N/A')}\n")
                             f.write("\n")
                         else:
                             f.write(f"Product ID: {product_id} not found in {db_path}\n")
