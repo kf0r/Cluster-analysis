@@ -53,14 +53,18 @@ def get_metadata(product_id, db_path):
     Returns:
         metadata (json): metadata for quered product
     '''
-    conn = sqlite3.connect(db_path)
-    c = conn.cursor()
-    c.execute('SELECT data FROM metadata WHERE asin = ?', (product_id,))
-    row = c.fetchone()
-    conn.close()
-    if row:
-        return json.loads(row[0])
-    else:
+    try:
+        conn = sqlite3.connect(db_path)
+        c = conn.cursor()
+        c.execute('SELECT data FROM metadata WHERE asin = ?', (product_id,))
+        row = c.fetchone()
+        conn.close()
+        if row:
+            return json.loads(row[0])
+        else:
+            return None
+    except sqlite3.Error as e:
+        print(f"Error while fetching {product_id} in {db_path}: {e}")
         return None
 
 if __name__ == '__main__':

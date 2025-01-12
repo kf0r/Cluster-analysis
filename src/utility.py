@@ -2,6 +2,7 @@ from clustering import calculate_density, analyze_centrality
 import os
 import database
 import random
+import sqlite3
 import numpy as np
 
 def jaccard_similarity(set1, set2):
@@ -14,9 +15,11 @@ def jaccard_similarity(set1, set2):
     Returns:
         jaccard_index (float): Jaccard index of two sets
     '''
-    if len(set1.union(set2)) == 0:
-        return 0
-    return len(set1.intersection(set2)) / len(set1.union(set2))
+    union_of_sets = set1.union(set2)
+    intersection_of_sets = set1.intersection(set2)
+    if union_of_sets == 0:
+        return 1
+    return len(intersection_of_sets) / len(union_of_sets)
 
 def normalize_clusters(cluster):
     '''
@@ -117,13 +120,21 @@ def save_communities(communities, db_path, prefix):
                 f.write("\n")
                 for product_id in community:
                     #print(f"{type(product_id)}")
-                    product_metadata = database.get_metadata(product_id, db_path)
-                    f.write(f"Product ID: {product_id}\n")
-                    f.write(f"Title: {product_metadata.get('title', 'N/A')}\n")
-                    f.write(f"Category: {product_metadata.get('main_category', 'N/A')}\n")
-                    f.write(f"Average Rating: {product_metadata.get('average_rating', 'N/A')}\n")
-                    f.write(f"Rating Number: {product_metadata.get('rating_number', 'N/A')}\n")
-                    f.write("\n")
+                    try:
+                        product_metadata = database.get_metadata(product_id, db_path)
+                        if product_metadata:
+                            f.write(f"Product ID: {product_id}\n")
+                            f.write(f"Title: {product_metadata.get('title', 'N/A')}\n")
+                            f.write(f"Category: {product_metadata.get('main_category', 'N/A')}\n")
+                            f.write(f"Average Rating: {product_metadata.get('average_rating', 'N/A')}\n")
+                            f.write(f"Rating Number: {product_metadata.get('rating_number', 'N/A')}\n")
+                            f.write("\n")
+                        else:
+                            f.write(f"Product ID: {product_id} not found in {db_path}\n")
+                            f.write("\n")
+                    except sqlite3.Error as e:
+                        f.write(f"Error while fetching {product_id} in {db_path}: {e}\n")
+                        f.write("\n")
                 else:
                     f.write(f"Product ID: {product_id}\n")
                     f.write("Metadata not found\n\n")
@@ -160,6 +171,7 @@ def compare_centralities(results):
     '''
     Compare central nodes found using different centrality measures by calculating Jaccard similarity.
     Jaccard similarity is calculated as intersection of nodes found by two measures divided by union of nodes found by two measures.
+    It is used to print out similarity between two centralities, rather than saving it, because its only one line. 
     Parameters:
         results (dict): dictionary where keys are centrality measures, values are lists of tuples (node, centrality value)
     Returns:
@@ -186,12 +198,17 @@ def get_moderate_community(cluster, min_size=5, max_size=100):
         community (list): list of nodes in community
     '''
     communities = normalize_clusters(cluster)
-    sizes = [len(community) for community in communities.values()]
+    #sizes = [len(community) for community in communities.values()]
     # mean_size = np.mean(sizes)
     # std_dev = np.std(sizes)
     # biggest_yet = 0
     # index = 0
-    for idx, community in communities.items():
-        if len(community) > min_size and len(community) < max_size:
-            return community
-    return None
+    # for idx, community in communities.items():
+    #     if len(community) > min_size and len(community) < max_size:
+    #         return community
+    #return None
+    return next(
+        filter(lambda community: min_size < len(community) < max_size, communities.values()),
+        None
+    )
+   

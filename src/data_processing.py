@@ -75,8 +75,13 @@ def filter_bipart_graph(graph, min_reviews=2):
     Returns:
         graph (nx.Graph): filtered graph
     '''
-    initial_product_count = len([node for node in graph.nodes if graph.nodes[node].get("bipartite") == 1])
-    initial_user_count = len([node for node in graph.nodes if graph.nodes[node].get("bipartite") == 0])
+    initial_product_count = sum(1 for node in graph.nodes if graph.nodes[node].get("bipartite") == 1)
+    '''
+    In bipartite graph two sets of vertixes are disjoint, so to optimise this function it is better to
+    calculate size of second set by subtracting size of first set from size of all vertexes in graph
+    len(graph) returns number of vertexes in graph, not size of the graph, which is amount of vertexes and edges.
+    '''
+    initial_user_count = len(graph) - initial_product_count 
     
     products_to_remove = [
         node for node in graph.nodes if graph.nodes[node].get("bipartite") == 1 and graph.degree(node) < min_reviews
