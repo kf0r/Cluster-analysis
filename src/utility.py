@@ -3,12 +3,13 @@ import os
 import database
 import random
 import sqlite3
+import networkx as nx
 import numpy as np
 
 def jaccard_similarity(set1, set2):
     '''
     Calculate Jaccard index of two sets.
-    If both sets are empty, return 0.
+    If both sets are empty, return 1.
     Parameters:
         set1 (set): first set
         set2 (set): second set
@@ -130,6 +131,7 @@ def save_communities(communities, db_path, prefix):
                             f.write(f"Subcategories: {product_metadata.get('categories', 'N/A')}\n")
                             f.write(f"Average Rating: {product_metadata.get('average_rating', 'N/A')}\n")
                             f.write(f"Rating Number: {product_metadata.get('rating_number', 'N/A')}\n")
+                            f.write(f"Author: {product_metadata.get('author', 'N/A')}\n")
                             f.write(f"Bought from: {product_metadata.get('store', 'N/A')}\n")
                             f.write("\n")
                         else:
@@ -215,3 +217,30 @@ def get_moderate_community(cluster, min_size=5, max_size=100):
         None
     )
    
+def save_basic_stats(graph, filepath = '../output/basic_stats.txt'):
+    '''
+    Finds graphs statistics and saves it in LaTeX friendly format
+    Parameters:
+        graph (nx.Graph): examinated graph
+        filepath (str): path to file where results are saved
+    Returns:
+        None
+    '''
+    with open(filepath, 'w') as f:
+        num_nodes = graph.number_of_nodes()
+        f.write(f"Liczba wierzchołków & {num_nodes} \\\\ \\hline \n")
+        num_edges = graph.number_of_edges()
+        f.write(f"Liczba krawędzi & {num_edges} \\\\ \\hline \n")
+        avg_degree = sum(dict(graph.degree()).values()) / num_nodes
+        f.write(f"Średni stopień wierzchołków & {avg_degree} \\\\ \\hline \n")
+        num_components = nx.number_connected_components(graph)
+        f.write(f"Liczba spójnych składowych & {num_components} \\\\ \\hline \n")
+        # largest_cc = max(nx.connected_components(review_graph), key=len)
+        # subgraph = review_graph.subgraph(largest_cc).copy()
+        # avg_path_length = nx.average_shortest_path_length(subgraph)
+
+        density = nx.density(graph)
+        f.write(f"Gęstość grafu & {density} \n")
+        # clustering_coeff = nx.average_clustering(graph)
+        # f.write(f"Średnia klastrowalność grafu & {clustering_coeff}")
+    

@@ -110,14 +110,14 @@ def create_bipartite_graph(reviews):
         B (nx.Graph): bipartite graph of users conneted to products they reviewed
     '''
     B = nx.Graph()
-    i=0
+    #i=0
     for review in reviews:
 
         #print(review)
         B.add_node(review.user_id, bipartite=0)
         B.add_node(review.product_id, bipartite=1)
         B.add_edge(review.user_id, review.product_id, review = review)
-        i+=1
+        #i+=1
         # if i%100==0:
         #     print(f"{B[review.user_id][review.product_id]} edge added")
     return B

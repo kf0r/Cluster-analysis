@@ -54,7 +54,53 @@ def plot_community_sizes_distro(clusters, output_dir="../output"):
         plot_filename = output_dir+ "/" + method + "/community_sizes_distro.png"
         plt.savefig(plot_filename)
         #plt.show()
-        plt.close()
+        
+
+def plot_components_sizes_distro(review_graph, output_dir="../output/plots"):
+    '''
+    Plot distribution of components sizes in graph
+    Parameters:
+        review_graph (nx.Graph): given graph
+        output_dir (str): path to diretory where plot will be saved
+    Returns:
+        None
+    '''
+    os.makedirs(output_dir, exist_ok=True)
+    plot_filename = output_dir + "/components_sizes_distro.png"
+    component_sizes = [len(component) for component in nx.connected_components(review_graph)]
+
+    plt.figure(figsize=(10, 6))
+    plt.hist(component_sizes, bins=30, color='skyblue', edgecolor='black')
+    plt.title("Rozkład rozmiarów składowych spójnych")
+    plt.xlabel("Rozmiar składowej")
+    plt.ylabel("Liczba składowych")
+    plt.grid(True)
+    plt.savefig(plot_filename)
+
+def plot_degree_distro(review_graph, output_dir="../output/plots"):
+    '''
+    Plot distribution of nodes degrees in graph
+    Parameters:
+        review_graph (nx.Graph): given graph
+        output_dir (str): path to diretory where plot will be saved
+    Returns:
+        None
+    '''
+    os.makedirs(output_dir, exist_ok=True)
+    plot_filename = output_dir + "/degrees_distro.png"
+    degrees = [degree for _, degree in review_graph.degree()]
+    degree_counts = {degree: degrees.count(degree) for degree in set(degrees)}
+
+    sorted_degrees = sorted(degree_counts.keys())
+    sorted_counts = [degree_counts[degree] for degree in sorted_degrees]
+
+    plt.figure(figsize=(10, 6))
+    plt.plot(sorted_degrees, sorted_counts, marker='o', linestyle='-', label='Rozkład stopni wierzchołków')
+    plt.xlabel("Stopień wierzchołka")
+    plt.ylabel("Liczba wierzchołków")
+    plt.grid(True, which="both", linestyle='--', linewidth=0.5)
+    plt.savefig(plot_filename)
+    plt.close()
 
 def plot_statistics_community_sizes(review_graph, clusters, output_dir="../output/plots"):
     '''
