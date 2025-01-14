@@ -193,7 +193,7 @@ def compare_centralities(results):
             print(f"Similarity between {metric1} and {metric2}: {similarity}")
         
 
-def get_moderate_community(cluster, min_size=5, max_size=100):
+def get_moderate_community(cluster, min_size=50, max_size=500):
     '''
     Get moderate community from cluster.
     Looks for communities with size good for representation
@@ -203,6 +203,7 @@ def get_moderate_community(cluster, min_size=5, max_size=100):
         community (list): list of nodes in community
     '''
     communities = normalize_clusters(cluster)
+    #print(communities)
     #sizes = [len(community) for community in communities.values()]
     # mean_size = np.mean(sizes)
     # std_dev = np.std(sizes)
@@ -213,7 +214,7 @@ def get_moderate_community(cluster, min_size=5, max_size=100):
     #         return community
     #return None
     return next(
-        filter(lambda community: min_size < len(community) < max_size, communities.values()),
+        filter(lambda community: print(f"Checking community: if {min_size}<{len(community)}<{max_size} ") or min_size < len(community) < max_size, communities.values()),
         None
     )
    
@@ -241,6 +242,6 @@ def save_basic_stats(graph, filepath = '../output/basic_stats.txt'):
 
         density = nx.density(graph)
         f.write(f"Gęstość grafu & {density} \n")
-        # clustering_coeff = nx.average_clustering(graph)
+        # sample_nodes = random.sample(graph.nodes(), k=10000)
+        # clustering_coeff = nx.average_clustering(graph, nodes=sample_nodes)
         # f.write(f"Średnia klastrowalność grafu & {clustering_coeff}")
-    

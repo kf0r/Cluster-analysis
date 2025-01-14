@@ -1,7 +1,7 @@
 import networkx as nx
 from data_processing import load_graph, process_reviews, create_bipartite_graph, filter_bipart_graph, generate_product_projection, save_graph
 from clustering import apply_clustering_algorithms
-from plotting import plot_community_sizes_distro, plot_statistics_community_sizes, plot_single_community, plot_components_sizes_distro, plot_degree_distro
+from plotting import plot_community_sizes_distro, plot_statistics_community_sizes, plot_single_community, plot_components_sizes_distro, plot_degree_distro, plot_clusters_categories
 from utility import find_dense, find_largest, save_communities, find_random, save_central_nodes, save_basic_stats
 
 if __name__ == "__main__":
@@ -41,7 +41,7 @@ if __name__ == "__main__":
     '''
     ##############################
     largest_component = max(nx.connected_components(review_graph), key=len)
-    review_graph = review_graph.subgraph(largest_component).copy()
+    review_graph = review_graph.subgraph(largest_component)
     print("Graph is connected")
 
     ##############################
@@ -87,10 +87,10 @@ if __name__ == "__main__":
     print("Plotting community size distribution...")
     plot_community_sizes_distro(clusters)
 
-    print("Mean community size graph...")
-    print("Variance community size graph...")
-    print("Standard deviation community size graph...")
-    print("Calculating modularity...")
+    print("Plotting categories distribution")
+    plot_clusters_categories(review_graph, clusters, db_path)
+
+    print("Calculating statistics of clusters...")
     plot_statistics_community_sizes(review_graph, clusters)
 
     print("Plotting single community...")

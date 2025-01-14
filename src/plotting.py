@@ -1,23 +1,14 @@
 import matplotlib.pyplot as plt
 import numpy as np
+import random
 import os
 import statistics
 from clustering import calculate_modularity
 import networkx as nx
-from utility import get_moderate_community
-
-# def visualize_statistics(analysis):
-#     methods = list(analysis.keys())
-#     means = [analysis[method]['mean'] for method in methods]
-#     variances = [analysis[method]['variance'] for method in methods]
-#     std_devs = [analysis[method]['std_dev'] for method in methods]
-
-#     plt.figure(figsize=(10, 6))
-#     plt.bar(methods, means, yerr=std_devs, capsize=5)
-#     plt.xlabel('Clustering Method')
-#     plt.ylabel('Cluster Size')
-#     plt.title('Cluster Size Statistics')
-#     plt.show()
+from utility import get_moderate_community, normalize_clusters
+import database
+from itertools import chain
+from collections import Counter
 
 def plot_community_sizes_distro(clusters, output_dir="../output"):
     '''
@@ -53,6 +44,7 @@ def plot_community_sizes_distro(clusters, output_dir="../output"):
         plt.grid(True)
         plot_filename = output_dir+ "/" + method + "/community_sizes_distro.png"
         plt.savefig(plot_filename)
+        plt.close()
         #plt.show()
         
 
@@ -76,6 +68,7 @@ def plot_components_sizes_distro(review_graph, output_dir="../output/plots"):
     plt.ylabel("Liczba składowych")
     plt.grid(True)
     plt.savefig(plot_filename)
+    plt.close()
 
 def plot_degree_distro(review_graph, output_dir="../output/plots"):
     '''
@@ -99,6 +92,17 @@ def plot_degree_distro(review_graph, output_dir="../output/plots"):
     plt.xlabel("Stopień wierzchołka")
     plt.ylabel("Liczba wierzchołków")
     plt.grid(True, which="both", linestyle='--', linewidth=0.5)
+    plt.savefig(plot_filename)
+    plt.close()
+
+    plot_filename = output_dir + "/degrees_distro_log.png"
+    plt.figure(figsize=(10, 6))
+    plt.plot(sorted_degrees, sorted_counts, marker='o', linestyle='-', label='Rozkład stopni wierzchołków')
+    plt.xlabel("Stopień wierzchołka (log)")
+    plt.ylabel("Liczba wierzchołków (log)")
+    plt.yscale('log')
+    plt.xscale('log')
+    #plt.grid(True, which="both", linestyle='--', linewidth=0.5)
     plt.savefig(plot_filename)
     plt.close()
 
@@ -195,3 +199,69 @@ def plot_single_community(graph, clusters, output_dir="../output"):
         plt.savefig(f"{output_dir}/{method}/single_community.png")
         plt.close()
         print("Subgraph drawn and saved")
+
+def plot_clusters_categories(graph, clusters, db_path, output_dir ="../output/plots/"):
+    '''
+    Finds average cluster for each method and random set of nodes
+    plots distribution of categories with use of plot_data_distro()
+    Parameters:
+        graph (nx.Graph): analysed graph
+        clusters (dict): dictionary containing clusters as values and name of method as key
+        output_dir (str): dictionary to store plots
+    Returns:
+        None
+    '''
+    size = 0
+    iterations=0
+    for method, cluster in clusters.items():
+        iterations+=1
+        communities = {c: [k for k, v in cluster.items() if v == c] for c in set(cluster.values())}
+        sizes = [len(community) for community in communities.values()]
+        mean = np.mean(sizes)
+        std_dev = np.std(sizes)
+        moderate = get_moderate_community(cluster, mean, mean+3*std_dev)
+        if not moderate: 
+            print("no moderate :(")
+            moderate = random.choice(communities)
+        size += len(moderate)
+        title = "Rozkład kategorii w społeczności " + method
+        plot_data_distro(moderate, 'categories', 'Kategoria', 'Liczba produktów', title, db_path, output_dir)
+    size //= iterations
+
+    random_nodes = random.sample(list(graph.nodes), size)
+    title = "Rozkład w losowej społeczności"
+    plot_data_distro(random_nodes, 'categories', 'Kategoria', 'Liczba produktów', title, db_path, output_dir)
+
+def plot_data_distro(community, data, xlab, ylab, title, db_path = "../data/metadata.db", output_dir = "../output/plots/"):
+    '''
+    Plots distribution of given metadata in given cluster
+    Parameters:
+        community (list): list of nodes IDs 
+        data (str): data to fetch from metadata
+        xlab (str): label for x axis
+        ylab (str): label for y axis
+        title (str): title for plot
+        output_dir (str): directory to save plot
+    Returns:
+        None
+    '''
+    metadata = [
+        database.get_metadata(node_id, db_path).get(data)
+        for node_id in community
+    ]
+    flatten = list(chain.from_iterable(metadata))
+    category_counts = Counter(flatten)
+    category_counts.pop('Books', None)
+
+    plt.bar(category_counts.keys(), category_counts.values(), color='skyblue')
+    plt.title(title)
+    plt.xlabel(xlab)
+    plt.ylabel(ylab)
+    plt.tight_layout()
+    plot_path = output_dir + title.replace(" ", "_")
+    plt.gca().set_xticklabels([])
+    plt.savefig(plot_path)
+    plt.close()
+    print(f"Saved plot in {plot_path}")
+    
+

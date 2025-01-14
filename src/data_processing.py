@@ -3,6 +3,7 @@ import pickle
 import networkx as nx
 from review import Review
 from itertools import combinations
+import os
 
 def save_graph(graph, filename):
     '''
@@ -41,7 +42,7 @@ def process_reviews(input_path, error_log="../output/error_lines.txt"):
     '''
     reviews = []
     rev = 0
-
+    os.makedirs(os.path.dirname(error_log), exist_ok=True)
     with open(input_path, 'r', encoding='utf-8') as infile, open(error_log, 'w', encoding='utf-8') as errorfile:
         for line_num, line in enumerate(infile, start=1):
             try:
