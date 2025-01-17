@@ -160,17 +160,46 @@ def save_central_nodes(G, db_path, amount=10, output_dir="../output/centralities
     for measure, nodes in results.items():
         filename = os.path.join(output_dir, f"{measure.replace(' ', '_').lower()}_centrality.txt")
         with open(filename, 'w') as f:
+            mean_rating = 0
             for node, value in nodes:
                 product_metadata = database.get_metadata(node, db_path)
+                r_number = product_metadata.get('rating_number', 'N/A')
+                subcategories = product_metadata.get('categories', 'N/A')
                 f.write(f"Centrality: {value}\n")
                 f.write(f"Product ID: {node}\n")
                 f.write(f"Title: {product_metadata.get('title', 'N/A')}\n")
                 f.write(f"Category: {product_metadata.get('main_category', 'N/A')}\n")
+                f.write(f"Subcategories, length: {len(subcategories)}: {subcategories}\n")
                 f.write(f"Average Rating: {product_metadata.get('average_rating', 'N/A')}\n")
-                f.write(f"Rating Number: {product_metadata.get('rating_number', 'N/A')}\n")
+                f.write(f"Rating Number: {r_number}\n")
+                f.write(f"Author: {product_metadata.get('author', 'N/A')}\n")
+                f.write(f"Bought from: {product_metadata.get('store', 'N/A')}\n")
                 f.write("\n")
-        print(f"{measure} saved to {filename}")
+                mean_rating+=r_number
+            mean_rating/=amount
+        print(f"{measure} saved to {filename}. Mean rating: {mean_rating}")
     compare_centralities(results)
+    mean_revs_amount(G)
+
+def mean_revs_amount(graph, amount = 1000, db_path = '../data/metadata.db'):
+    '''
+    Use Monte Carlo technique for finding mean rating number
+    Used for comparing mean node with most central nodes
+    Parameters:
+        graph (nx.Graph): analyzed graph
+        amount (int): amount of nodes to be randomly chosen
+        db_path (str): path to metadata database
+    Returns:
+        None
+    '''
+    random_nodes = random.sample(list(graph.nodes), amount)
+    rev_amount= 0
+    for node in random_nodes:
+        product_metadata = database.get_metadata(node, db_path)
+        rev_amount += product_metadata.get('rating_number')
+    rev_amount/=amount
+    print(f"Mean rating number: {rev_amount}")
+
 
 def compare_centralities(results):
     '''

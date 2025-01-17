@@ -219,7 +219,7 @@ def plot_clusters_categories(graph, clusters, db_path, output_dir ="../output/pl
         sizes = [len(community) for community in communities.values()]
         mean = np.mean(sizes)
         std_dev = np.std(sizes)
-        moderate = get_moderate_community(cluster, mean, mean+3*std_dev)
+        moderate = get_moderate_community(cluster, std_dev+mean, mean+5*std_dev)
         if not moderate: 
             print("no moderate :(")
             moderate = random.choice(communities)

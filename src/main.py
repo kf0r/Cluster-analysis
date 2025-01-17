@@ -20,30 +20,30 @@ if __name__ == "__main__":
         print(f"Bipart graph size after filtering: {len(B.edges)}")
 
         review_graph = generate_product_projection(B)
+            ##############################
+        '''
+        BASIC STATISTICS
+        '''
+        ##############################
+        print(f"Graph size: {len(review_graph.nodes)} nodes, {len(review_graph.edges)} edges.")
+        save_basic_stats(review_graph)
+        plot_components_sizes_distro(review_graph)
+        plot_degree_distro(review_graph)
+        print("Basic statistics saved")
+
+        ##############################
+        '''
+        CONNECTIVITY
+        '''
+        ##############################
+        largest_component = max(nx.connected_components(review_graph), key=len)
+        review_graph = review_graph.subgraph(largest_component)
+        print("Graph is connected")
         
         save_graph(review_graph, graph_filename)
         print("Graph generated and saved to file")
 
-    ##############################
-    '''
-    BASIC STATISTICS
-    '''
-    ##############################
-    print(f"Graph size: {len(review_graph.nodes)} nodes, {len(review_graph.edges)} edges.")
-    save_basic_stats(review_graph)
-    plot_components_sizes_distro(review_graph)
-    plot_degree_distro(review_graph)
-    print("Basic statistics saved")
     
-    ##############################
-    '''
-    CONNECTIVITY
-    '''
-    ##############################
-    largest_component = max(nx.connected_components(review_graph), key=len)
-    review_graph = review_graph.subgraph(largest_component)
-    print("Graph is connected")
-
     ##############################
     '''
     CLUSTERING
@@ -102,4 +102,4 @@ if __name__ == "__main__":
     '''
     ##############################
     print("Looking for central nodes...")
-    save_central_nodes(review_graph, db_path)
+    save_central_nodes(review_graph, db_path, review_graph.number_of_nodes()//10)
