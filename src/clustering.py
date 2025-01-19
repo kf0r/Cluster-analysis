@@ -54,29 +54,6 @@ def calculate_density(G, community):
     subgraph = G.subgraph(community)
     return nx.density(subgraph)
 
-def analyze_clusters(clusters):
-    '''
-    Analyze clusters in statistical terms.
-    Parameters:
-        clusters (dict): dictionary where keys are method names, values are partition results.
-    Returns:
-        analysis (dict): dictionary where keys are method names, values are dictionaries with mean, variance and standard deviation of community sizes.
-    '''
-    analysis = {}
-    for method, cluster in clusters.items():
-        if isinstance(cluster, dict):
-            # For Louvain, which returns a dictionary
-            sizes = [len([k for k, v in cluster.items() if v == c]) for c in set(cluster.values())]
-        elif hasattr(cluster, 'communities'):
-            # For NodeClustering objects
-            sizes = [len(c) for c in cluster.communities]
-        analysis[method] = {
-            'mean': np.mean(sizes),
-            'variance': np.var(sizes),
-            'std_dev': np.std(sizes)
-        }
-    return analysis
-
 def analyze_centrality(G, amount=10):
     '''
     Analyze centrality measures of nodes in graph G.
