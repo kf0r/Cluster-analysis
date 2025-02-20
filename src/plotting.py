@@ -10,6 +10,11 @@ import database
 from itertools import chain
 from collections import Counter
 
+
+##########################################################
+## Functions plotting values
+##########################################################
+
 def plot_community_sizes_distro(clusters, output_dir="../output"):
     '''
     Plot community sizes distribution for each clustering algorithm using matplotlib.
@@ -120,7 +125,6 @@ def plot_statistics_community_sizes(review_graph, clusters, output_dir="../outpu
     os.makedirs(output_dir, exist_ok=True)
     means = {}
     std_devs = {}
-    variances = {}
     medians = {}
     modes = {}
     modularities = {}
@@ -129,21 +133,22 @@ def plot_statistics_community_sizes(review_graph, clusters, output_dir="../outpu
         sizes = [len(community) for community in communities.values()]
         means[method] = np.mean(sizes)
         print(f"Method: {method}, mean: {means[method]}")
-        std_devs[method] = np.std(sizes)
+
+        std_devs[method] = np.std(sizes, mean=means[method])
         print(f"Method: {method}, std_dev: {std_devs[method]}")
-        variances[method] = np.var(sizes)
-        print(f"Method: {method}, variance: {variances[method]}")
+
         medians[method] = np.median(sizes)
         print(f"Method: {method}, median: {medians[method]}")
+
         modes[method] = statistics.mode(sizes)
         print(f"Method: {method}, mode: {modes[method]}")
+        
         modularities[method] = calculate_modularity(review_graph, cluster)
         print(f"Method: {method}, modularity: {modularities[method]}")
     
     plot_from_data(modularities, "Modularność klastrów", "Metoda", "Modularność", output_dir)
     plot_from_data(means, "Średnia wielkość społeczności", "Metoda", "Średnia", output_dir)
     plot_from_data(std_devs, "Odchylenie standardowe wielkości społeczności", "Metoda", "Odchylenie standardowe", output_dir)
-    plot_from_data(variances, "Wariancja wielkości społeczności", "Metoda", "Wariancja", output_dir)
     plot_from_data(medians, "Mediana wielkości społeczności", "Metoda", "Mediana", output_dir)
     plot_from_data(modes, "Dominanta wielkości społeczności", "Metoda", "Dominanta", output_dir)
 

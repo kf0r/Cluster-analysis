@@ -27,7 +27,6 @@ class Review:
         self.score = float(score)
         if not isinstance(text, str):
             raise ValueError(f"Faukty text {text}")
-        #ocena przychylnosci tekstu 
         self.sentiment = TextBlob(text).sentiment.polarity
         self.text = text
 

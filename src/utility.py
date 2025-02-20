@@ -6,6 +6,10 @@ import sqlite3
 import networkx as nx
 import numpy as np
 
+
+##########################################################
+## Functions returning values
+##########################################################
 def jaccard_similarity(set1, set2):
     '''
     Calculate Jaccard index of two sets.
@@ -102,6 +106,37 @@ def find_random(clusters, num_communities=10):
         random_communities[method] = random.sample(community_list, min(num_communities, len(community_list)))
     return random_communities
 
+def get_moderate_community(cluster, min_size=50, max_size=500):
+    '''
+    Get moderate community from cluster.
+    Looks for communities with size good for representation
+    Parameters:
+        cluster (dict): dictionary where keys are nodes, values are community assignments   
+    Returns:
+        community (list): list of nodes in community
+    '''
+    communities = normalize_clusters(cluster)
+    #print(communities)
+    #sizes = [len(community) for community in communities.values()]
+    # mean_size = np.mean(sizes)
+    # std_dev = np.std(sizes)
+    # biggest_yet = 0
+    # index = 0
+    # for idx, community in communities.items():
+    #     if len(community) > min_size and len(community) < max_size:
+    #         return community
+    #return None
+    return next(
+        filter(lambda community: print(f"Checking community: if {min_size}<{len(community)}<{max_size} ") or min_size < len(community) < max_size, communities.values()),
+        None
+    )
+
+
+
+
+##########################################################
+## Helper functions - printing or saving data
+##########################################################
 def save_communities(communities, db_path, prefix):
     '''
     Save product metadata of communities to files.
@@ -200,7 +235,6 @@ def mean_revs_amount(graph, amount = 1000, db_path = '../data/metadata.db'):
     rev_amount/=amount
     print(f"Mean rating number: {rev_amount}")
 
-
 def compare_centralities(results):
     '''
     Compare central nodes found using different centrality measures by calculating Jaccard similarity.
@@ -220,32 +254,6 @@ def compare_centralities(results):
             nodes2 = set([node for node, _ in results[metric2]])
             similarity = jaccard_similarity(nodes1, nodes2)
             print(f"Similarity between {metric1} and {metric2}: {similarity}")
-        
-
-def get_moderate_community(cluster, min_size=50, max_size=500):
-    '''
-    Get moderate community from cluster.
-    Looks for communities with size good for representation
-    Parameters:
-        cluster (dict): dictionary where keys are nodes, values are community assignments   
-    Returns:
-        community (list): list of nodes in community
-    '''
-    communities = normalize_clusters(cluster)
-    #print(communities)
-    #sizes = [len(community) for community in communities.values()]
-    # mean_size = np.mean(sizes)
-    # std_dev = np.std(sizes)
-    # biggest_yet = 0
-    # index = 0
-    # for idx, community in communities.items():
-    #     if len(community) > min_size and len(community) < max_size:
-    #         return community
-    #return None
-    return next(
-        filter(lambda community: print(f"Checking community: if {min_size}<{len(community)}<{max_size} ") or min_size < len(community) < max_size, communities.values()),
-        None
-    )
    
 def save_basic_stats(graph, filepath = '../output/basic_stats.txt'):
     '''
